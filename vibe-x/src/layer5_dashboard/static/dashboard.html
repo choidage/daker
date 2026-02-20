@@ -1,0 +1,3770 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIBE-X Team Intelligence Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e4e6eb;
+    --muted: #8b8fa3;
+    --accent: #6c5ce7;
+    --green: #00d2a0;
+    --red: #ff6b6b;
+    --yellow: #ffd93d;
+    --blue: #4da6ff;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+  }
+  .header h1 { font-size: 1.3rem; font-weight: 700; }
+  .header h1 span { color: var(--accent); }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .85rem;
+    color: var(--muted);
+  }
+  .header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+  /* Language Toggle */
+  .lang-toggle {
+    display: flex;
+    align-items: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+  }
+  .lang-btn {
+    padding: 6px 14px;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--muted);
+    transition: all .2s;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+  .lang-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .lang-btn:hover:not(.active) {
+    color: var(--text);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px 28px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card-title {
+    font-size: .78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+  }
+  .card-value {
+    font-size: 2rem;
+    font-weight: 700;
+  }
+  .card-sub {
+    font-size: .8rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    padding: 0 28px 20px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding: 0 28px 20px;
+  }
+  .card h3 {
+    font-size: .9rem;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+  .chart-wrap {
+    position: relative;
+    height: 220px;
+  }
+  .gate-log {
+    list-style: none;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .gate-log li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .82rem;
+  }
+  .gate-log .badge {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+  .badge.pass { background: rgba(0,210,160,.15); color: var(--green); }
+  .badge.fail { background: rgba(255,107,107,.15); color: var(--red); }
+  .badge.warn { background: rgba(255,217,61,.15); color: var(--yellow); }
+  .team-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .team-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+  .team-info { flex: 1; }
+  .team-info .name { font-size: .85rem; font-weight: 600; }
+  .team-info .detail { font-size: .75rem; color: var(--muted); }
+  .health-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .health-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .6s ease;
+  }
+  .layer-list { list-style: none; }
+  .layer-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .82rem;
+  }
+  .layer-num {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+  .suggestion-item {
+    padding: 10px 12px;
+    background: rgba(108,92,231,.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 8px;
+    font-size: .82rem;
+    line-height: 1.4;
+  }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 28px;
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 8px 18px;
+    border-radius: 8px 8px 0 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .tab.active {
+    background: var(--card);
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  /* Gate Analysis - Layer Status Grid */
+  .layer-status-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+  .layer-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color .3s;
+  }
+  .layer-card:hover {
+    border-color: var(--accent);
+  }
+  .layer-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .layer-card .layer-num {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .layer-card .layer-name {
+    font-size: .88rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  .layer-card .layer-desc {
+    font-size: .78rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+  .layer-card .layer-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+  }
+  .layer-indicator {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .layer-indicator.active { background: var(--green); }
+  .layer-indicator.idle { background: var(--muted); }
+  .layer-indicator.warn { background: var(--yellow); }
+  .layer-stat-text {
+    font-size: .75rem;
+    color: var(--muted);
+  }
+  @media (max-width: 1024px) {
+    .layer-status-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .layer-status-grid { grid-template-columns: 1fr; }
+  }
+  /* Onboarding Tab Styles */
+  .ob-section { margin-bottom: 20px; }
+  .ob-desc {
+    font-size: .95rem;
+    color: var(--text);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+  /* Flow Diagram */
+  .ob-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 20px 0;
+    overflow-x: auto;
+  }
+  .ob-flow-node {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 12px 12px;
+    text-align: center;
+    width: 250px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: transform .2s, border-color .2s, box-shadow .2s;
+  }
+  .ob-flow-node.status-active {
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(0,210,160,.15);
+  }
+  .ob-flow-node.status-warn {
+    border-color: var(--yellow);
+    box-shadow: 0 0 12px rgba(255,217,61,.15);
+  }
+  .ob-flow-node.status-idle {
+    border-color: var(--border);
+  }
+  .ob-flow-node:hover {
+    transform: translateY(-3px);
+  }
+  .ob-flow-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: .72rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+  }
+  .ob-flow-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+  .ob-flow-dot.active { background: var(--green); }
+  .ob-flow-dot.warn { background: var(--yellow); }
+  .ob-flow-dot.idle { background: var(--muted); }
+  .ob-flow-status-text.active { color: var(--green); }
+  .ob-flow-status-text.warn { color: var(--yellow); }
+  .ob-flow-status-text.idle { color: var(--muted); }
+  .ob-flow-num {
+    font-size: .7rem;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .ob-flow-name {
+    font-size: .85rem;
+    font-weight: 600;
+    margin-top: 4px;
+    color: var(--text);
+  }
+  .ob-flow-arrow {
+    color: var(--accent);
+    font-size: 1.4rem;
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+  /* Module Cards */
+  .ob-modules-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .ob-mod-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    transition: border-color .2s;
+  }
+  .ob-mod-card:hover { border-color: var(--accent); }
+  .ob-mod-icon {
+    font-size: 1.6rem;
+    margin-bottom: 8px;
+  }
+  .ob-mod-name {
+    font-size: .82rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .ob-mod-count {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .ob-mod-label {
+    font-size: .72rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .ob-mod-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .ob-mod-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  /* Quick Start Checklist */
+  .ob-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ob-check-item:last-child { border-bottom: none; }
+  .ob-check-icon {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ob-check-icon.done {
+    background: rgba(0,210,160,.15);
+    color: var(--green);
+  }
+  .ob-check-icon.todo {
+    background: var(--border);
+    color: var(--muted);
+  }
+  .ob-check-text {
+    font-size: .88rem;
+    line-height: 1.4;
+  }
+  .ob-check-text .cmd {
+    font-family: 'Consolas', monospace;
+    background: var(--bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: .8rem;
+    color: var(--accent);
+  }
+  /* ADR Timeline (visual) */
+  .ob-timeline {
+    position: relative;
+    padding-left: 28px;
+  }
+  .ob-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--accent);
+    border-radius: 1px;
+  }
+  .ob-tl-item {
+    position: relative;
+    padding: 14px 0 14px 20px;
+  }
+  .ob-tl-item::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 20px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--card);
+  }
+  .ob-tl-title {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ob-tl-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 4px;
+    font-size: .68rem;
+    font-weight: 600;
+    background: rgba(108,92,231,.15);
+    color: var(--accent);
+    margin-right: 8px;
+  }
+  .ob-tl-desc {
+    font-size: .8rem;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  .ob-row {
+    display: flex;
+    gap: 20px;
+  }
+  @media (max-width: 1024px) {
+    .ob-modules-grid { grid-template-columns: repeat(3, 1fr); }
+    .ob-row { flex-direction: column; }
+  }
+  /* Feedback Tab */
+  .fb-row {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+  }
+  .fb-chart-card { flex: 1.2; min-width: 0; }
+  .fb-reason-card { flex: 1; min-width: 280px; }
+  .fb-reason-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .fb-reason-item:last-child { border-bottom: none; }
+  .fb-reason-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .fb-reason-gate {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .fb-reason-count {
+    font-size: .72rem;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: rgba(255,107,107,.15);
+    color: var(--red);
+    font-weight: 600;
+  }
+  .fb-reason-desc {
+    font-size: .82rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .fb-reason-empty {
+    color: var(--muted);
+    font-size: .85rem;
+    padding: 20px 0;
+  }
+  @media (max-width: 1024px) {
+    .fb-row { flex-direction: column; }
+  }
+  @media (max-width: 1024px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ===== Login Screen ===== */
+  .login-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .login-overlay.hidden { display: none; }
+  .login-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px 40px;
+    width: 380px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  .login-box .logo {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .login-box .logo span { color: var(--accent); }
+  .login-box .subtitle {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+  .login-box input {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: .95rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .login-box input:focus {
+    border-color: var(--accent);
+  }
+  .login-box input::placeholder {
+    color: var(--muted);
+  }
+  .login-box .login-submit {
+    width: 100%;
+    padding: 12px;
+    margin-top: 6px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .login-box .login-submit:hover { opacity: .85; }
+  .login-box .login-submit:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+  .login-error {
+    color: var(--red);
+    font-size: .85rem;
+    margin-top: 12px;
+    min-height: 20px;
+  }
+  .login-hint {
+    font-size: .75rem;
+    color: var(--muted);
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== User Badge (Header) ===== */
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 14px 4px 4px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+  }
+  .user-avatar {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+  .user-name {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .user-role-tag {
+    font-size: .68rem;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .user-menu {
+    display: none;
+    position: absolute;
+    top: 42px;
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    min-width: 180px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    z-index: 100;
+    overflow: hidden;
+  }
+  .user-menu.show { display: block; }
+  .user-menu-item {
+    padding: 10px 16px;
+    font-size: .85rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .user-menu-item:hover { background: var(--bg); }
+  .user-menu-item.danger { color: var(--red); font-weight: 600; }
+  .user-menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 2px 0;
+  }
+  .header-logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .header-logout-btn:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: rgba(255,107,107,.08);
+  }
+
+  /* ===== User Management Modal ===== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal-box h2 {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+  .modal-close {
+    float: right;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  .modal-close:hover { color: var(--text); }
+  .user-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+  }
+  .user-table th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    font-size: .78rem;
+    text-transform: uppercase;
+  }
+  .user-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .role-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+  .role-badge.admin { background: rgba(108,92,231,.2); color: var(--accent); }
+  .role-badge.lead { background: rgba(77,166,255,.2); color: var(--blue); }
+  .role-badge.developer { background: rgba(0,210,160,.2); color: var(--green); }
+  .role-badge.viewer { background: rgba(139,143,163,.2); color: var(--muted); }
+
+  /* Add User Form */
+  .add-user-form {
+    display: none;
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .add-user-form.show { display: block; }
+  .add-user-form input, .add-user-form select {
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text);
+    font-size: .9rem;
+    outline: none;
+  }
+  .add-user-form input:focus, .add-user-form select:focus {
+    border-color: var(--accent);
+  }
+  .form-row {
+    display: flex;
+    gap: 10px;
+  }
+  .form-row > * { flex: 1; }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .btn-primary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-primary:hover { opacity: .85; }
+  .btn-outline {
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-outline:hover { color: var(--text); border-color: var(--text); }
+  .btn-add-user {
+    padding: 8px 16px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--accent);
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  .btn-add-user:hover { border-color: var(--accent); }
+
+  /* Action buttons in user table */
+  .actions-cell {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .action-btn {
+    width: 30px; height: 30px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--muted);
+    font-size: .85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+  }
+  .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .action-btn.edit:hover { color: var(--blue); border-color: var(--blue); }
+  .action-btn.deact:hover { color: var(--red); border-color: var(--red); }
+  .action-btn.act:hover { color: var(--green); border-color: var(--green); }
+  .action-btn.pw:hover { color: var(--yellow); border-color: var(--yellow); }
+  .action-btn.del { color: #ff4444; }
+  .action-btn.del:hover { color: #ff0000; border-color: #ff0000; background: rgba(255,0,0,.08); }
+
+  /* Inline edit inputs */
+  .edit-input {
+    padding: 6px 10px;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: .85rem;
+    width: 100%;
+    outline: none;
+  }
+  .edit-input:focus { border-color: var(--blue); }
+  .hidden { display: none !important; }
+  .display-val { display: inline; }
+
+  /* ===== RAG Search Tab ===== */
+  .search-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .search-input {
+    flex: 1;
+    padding: 14px 20px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+  .search-submit {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+    white-space: nowrap;
+  }
+  .search-submit:hover { opacity: .85; }
+  .search-submit:disabled { opacity: .5; cursor: not-allowed; }
+  .search-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .search-stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 24px;
+    text-align: center;
+    min-width: 140px;
+  }
+  .search-stat-val {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .search-stat-label {
+    font-size: .78rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .search-result-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    transition: border-color .2s;
+  }
+  .search-result-item:hover { border-color: var(--accent); }
+  .search-result-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .search-score {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: .78rem;
+    font-weight: 700;
+  }
+  .search-score.high { background: rgba(0,210,160,.15); color: var(--green); }
+  .search-score.mid { background: rgba(255,217,61,.15); color: var(--yellow); }
+  .search-score.low { background: rgba(255,107,107,.15); color: var(--red); }
+  .search-file {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--blue);
+  }
+  .search-meta {
+    font-size: .75rem;
+    color: var(--muted);
+    margin-left: auto;
+  }
+  .search-code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: .82rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    color: var(--text);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .search-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .search-empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .search-empty-text { font-size: 1rem; }
+  .search-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .search-filter-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: .8rem;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .search-filter-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .search-filter-btn:hover:not(.active) {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  /* ===== M3: Pipeline Runner ===== */
+  .pipeline-runner {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .pipeline-input {
+    flex: 1;
+    padding: 12px 18px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: .92rem;
+    outline: none;
+    font-family: 'Consolas', monospace;
+    transition: border-color .2s;
+  }
+  .pipeline-input:focus { border-color: var(--accent); }
+  .pipeline-input::placeholder { color: var(--muted); }
+  .pipeline-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .2s;
+    white-space: nowrap;
+  }
+  .pipeline-btn-run {
+    background: var(--accent);
+    color: #fff;
+  }
+  .pipeline-btn-run:hover { opacity: .85; }
+  .pipeline-btn-run:disabled { opacity: .5; cursor: not-allowed; }
+  .pipeline-btn-bypass {
+    background: rgba(255,217,61,.15);
+    color: var(--yellow);
+    border: 1px solid var(--yellow);
+  }
+  .pipeline-results {
+    margin-top: 16px;
+  }
+  .pipeline-gate-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    transition: background .2s;
+  }
+  .pipeline-gate-row:hover { background: rgba(108,92,231,.04); }
+  .pipeline-gate-num {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .88rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .pipeline-gate-num.passed { background: rgba(0,210,160,.15); color: var(--green); }
+  .pipeline-gate-num.failed { background: rgba(255,107,107,.15); color: var(--red); }
+  .pipeline-gate-num.warning { background: rgba(255,217,61,.15); color: var(--yellow); }
+  .pipeline-gate-num.skipped { background: var(--border); color: var(--muted); }
+  .pipeline-gate-num.pending { background: var(--border); color: var(--muted); }
+  .pipeline-gate-info { flex: 1; }
+  .pipeline-gate-name { font-size: .88rem; font-weight: 600; }
+  .pipeline-gate-msg { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .pipeline-gate-status {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .pipeline-gate-status.passed { background: rgba(0,210,160,.15); color: var(--green); }
+  .pipeline-gate-status.failed { background: rgba(255,107,107,.15); color: var(--red); }
+  .pipeline-gate-status.warning { background: rgba(255,217,61,.15); color: var(--yellow); }
+  .pipeline-gate-status.skipped { background: var(--border); color: var(--muted); }
+  .pipeline-overall {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: 10px;
+    margin-top: 16px;
+    font-weight: 600;
+    font-size: .92rem;
+  }
+  .pipeline-overall.passed { background: rgba(0,210,160,.08); border: 1px solid rgba(0,210,160,.25); color: var(--green); }
+  .pipeline-overall.warning { background: rgba(255,217,61,.08); border: 1px solid rgba(255,217,61,.25); color: var(--yellow); }
+  .pipeline-overall.failed { background: rgba(255,107,107,.08); border: 1px solid rgba(255,107,107,.25); color: var(--red); }
+
+  /* ===== M3: Work Zone ===== */
+  .wz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .wz-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    transition: border-color .2s;
+  }
+  .wz-card:hover { border-color: var(--accent); }
+  .wz-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .wz-avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .78rem;
+    font-weight: 700;
+  }
+  .wz-name { font-weight: 600; font-size: .88rem; }
+  .wz-time { font-size: .72rem; color: var(--muted); }
+  .wz-files { font-size: .78rem; color: var(--muted); line-height: 1.5; }
+  .wz-file-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    margin: 2px;
+    background: rgba(108,92,231,.1);
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: .72rem;
+    color: var(--accent);
+  }
+  .wz-declare {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .wz-declare input {
+    flex: 1;
+    min-width: 120px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: .82rem;
+    outline: none;
+  }
+  .wz-declare input:focus { border-color: var(--accent); }
+  .wz-declare button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .wz-empty {
+    text-align: center;
+    padding: 30px;
+    color: var(--muted);
+    font-size: .88rem;
+  }
+
+  /* ===== M3: Decision Extractor ===== */
+  .de-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 14px 18px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: .88rem;
+    line-height: 1.5;
+    outline: none;
+    resize: vertical;
+    font-family: 'Segoe UI', sans-serif;
+    transition: border-color .2s;
+  }
+  .de-textarea:focus { border-color: var(--accent); }
+  .de-textarea::placeholder { color: var(--muted); }
+  .de-decision-card {
+    background: var(--bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .de-decision-title {
+    font-size: .92rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .de-confidence {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .72rem;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .de-confidence.high { background: rgba(0,210,160,.15); color: var(--green); }
+  .de-confidence.mid { background: rgba(255,217,61,.15); color: var(--yellow); }
+  .de-confidence.low { background: rgba(255,107,107,.15); color: var(--red); }
+  .de-decision-body {
+    font-size: .82rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+  .de-adr-saved {
+    font-size: .75rem;
+    color: var(--green);
+    margin-top: 6px;
+  }
+
+  /* ===== M4: Alerts ===== */
+  .alert-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 28px;
+    background: rgba(255,107,107,.06);
+    border-bottom: 1px solid rgba(255,107,107,.15);
+    font-size: .85rem;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .alert-bar:hover { background: rgba(255,107,107,.1); }
+  .alert-bar.hidden { display: none; }
+  .alert-bar .alert-icon { font-size: 1.1rem; }
+  .alert-bar .alert-text { flex: 1; color: var(--yellow); }
+  .alert-bar .alert-count {
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: rgba(255,107,107,.15);
+    color: var(--red);
+    font-weight: 700;
+    font-size: .78rem;
+  }
+  .alert-bar .alert-dismiss {
+    padding: 4px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    font-size: .75rem;
+    cursor: pointer;
+  }
+  .alert-panel {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0 28px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    display: none;
+  }
+  .alert-panel.open { display: block; }
+  .alert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-level {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .alert-level.critical { background: var(--red); }
+  .alert-level.warning { background: var(--yellow); }
+  .alert-level.info { background: var(--blue); }
+  .alert-title { font-size: .85rem; font-weight: 600; }
+  .alert-msg { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .alert-time { font-size: .72rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+
+  /* ===== M4: Q&A ===== */
+  .qa-box {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .qa-input {
+    flex: 1;
+    padding: 12px 18px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: .92rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .qa-input:focus { border-color: var(--accent); }
+  .qa-input::placeholder { color: var(--muted); }
+  .qa-answer {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    font-size: .88rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+  .qa-answer code {
+    background: rgba(108,92,231,.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    font-size: .82rem;
+    color: var(--accent);
+  }
+
+  /* ===== M4: Health Breakdown ===== */
+  .health-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .health-detail-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .health-detail-val {
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+  .health-detail-label {
+    font-size: .75rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .health-detail-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .health-detail-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width .6s;
+  }
+  .tech-debt-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: .85rem;
+  }
+  .tech-debt-severity {
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .tech-debt-severity.high { background: rgba(255,107,107,.15); color: var(--red); }
+  .tech-debt-severity.medium { background: rgba(255,217,61,.15); color: var(--yellow); }
+</style>
+</head>
+<body>
+
+<!-- ===== Login Screen ===== -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <div class="logo"><span>VIBE-X</span></div>
+    <div class="subtitle" data-i18n="header_title">Team Intelligence Dashboard</div>
+    <input type="text" id="login-user" placeholder="Username" autocomplete="username">
+    <input type="password" id="login-pass" placeholder="Password" autocomplete="current-password">
+    <button class="login-submit" id="login-btn" data-i18n="login_btn">Login</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-hint">
+      기본 계정: admin / admin (영문 소문자)<br>
+      비밀번호가 맞지 않으면 daker 폴더의 admin-비밀번호-초기화.bat 실행
+    </div>
+  </div>
+</div>
+
+<!-- ===== User Management Modal ===== -->
+<div class="modal-overlay hidden" id="user-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="modal-close-btn">&times;</button>
+    <h2 data-i18n="user_manage">User Management</h2>
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th data-i18n="login_username">Username</th>
+          <th data-i18n="user_name">Name</th>
+          <th data-i18n="user_email">Email</th>
+          <th data-i18n="user_role">Role</th>
+          <th data-i18n="user_status">Status</th>
+          <th data-i18n="user_actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="user-table-body"></tbody>
+    </table>
+    <button class="btn-add-user" id="show-add-form-btn">+ <span data-i18n="user_add">Add User</span></button>
+    <div class="add-user-form" id="add-user-form">
+      <div class="form-row">
+        <input type="text" id="new-username" placeholder="Username">
+        <input type="text" id="new-display" placeholder="Display Name">
+      </div>
+      <div class="form-row">
+        <input type="email" id="new-email" placeholder="Email">
+        <input type="password" id="new-password" placeholder="Password (6+)">
+      </div>
+      <select id="new-role">
+        <option value="developer">Developer</option>
+        <option value="lead">Team Lead</option>
+        <option value="viewer">Viewer</option>
+        <option value="admin">Admin</option>
+      </select>
+      <div class="btn-row">
+        <button class="btn-primary" id="add-user-btn" data-i18n="add_user_btn">Register</button>
+        <button class="btn-outline" id="cancel-add-btn" data-i18n="cancel_btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <h1><span>VIBE-X</span> <span data-i18n="header_title">Team Intelligence Dashboard</span></h1>
+  <div class="header-right">
+    <div class="lang-toggle" id="lang-toggle">
+      <button class="lang-btn active" data-lang="ko">KO</button>
+      <button class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <!-- User Badge (after login) -->
+    <div class="user-badge" id="user-badge" style="display:none;">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <div>
+        <div class="user-name" id="user-display-name">Admin</div>
+        <div class="user-role-tag" id="user-role-tag">admin</div>
+      </div>
+      <div class="user-menu" id="user-menu">
+        <div class="user-menu-item" id="menu-users">&#128101; <span data-i18n="user_manage">User Management</span></div>
+        <div class="user-menu-divider"></div>
+        <div class="user-menu-item danger" id="menu-logout">&#9211; <span data-i18n="logout_btn">Logout</span></div>
+      </div>
+    </div>
+    <!-- 로그아웃 버튼 (항상 표시) -->
+    <button class="header-logout-btn" id="header-logout-btn" style="display:none;" title="Logout">&#9211;</button>
+    <div class="status">
+      <div class="dot"></div>
+      <span id="ws-status">Connecting...</span>
+      <span id="last-update"></span>
+    </div>
+  </div>
+</div>
+
+<!-- Alert Bar -->
+<div class="alert-bar hidden" id="alert-bar" onclick="toggleAlertPanel()">
+  <span class="alert-icon">&#9888;</span>
+  <span class="alert-text" id="alert-bar-text">No alerts</span>
+  <span class="alert-count" id="alert-bar-count">0</span>
+  <button class="alert-dismiss" onclick="event.stopPropagation(); dismissAllAlerts()">Dismiss All</button>
+</div>
+<div class="alert-panel" id="alert-panel"></div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="overview" data-i18n="tab_overview">Overview</div>
+  <div class="tab" data-tab="gates" data-i18n="tab_gates">Gate Analysis</div>
+  <div class="tab" data-tab="onboarding" data-i18n="tab_onboarding">Onboarding</div>
+  <div class="tab" data-tab="feedback" data-i18n="tab_feedback">Feedback Loop</div>
+  <div class="tab" data-tab="search" data-i18n="tab_search">RAG Search</div>
+  <div class="tab" data-tab="pipeline" data-i18n="tab_pipeline">Pipeline</div>
+  <div class="tab" data-tab="collab" data-i18n="tab_collab">Collaboration</div>
+</div>
+
+<!-- TAB: Overview -->
+<div class="tab-content active" id="tab-overview">
+  <div class="grid">
+    <div class="card">
+      <div class="card-title" data-i18n="health_score">Health Score</div>
+      <div class="card-value" id="health-score" style="color:var(--green)">--</div>
+      <div class="health-bar"><div class="health-fill" id="health-fill" style="width:0;background:var(--green)"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="gate_pass_rate">Gate Pass Rate</div>
+      <div class="card-value" id="pass-rate" style="color:var(--blue)">--%</div>
+      <div class="card-sub" id="gate-runs-today">Today: 0 runs</div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="ai_cost_today">AI Cost (Today)</div>
+      <div class="card-value" id="today-cost" style="color:var(--yellow)">$0</div>
+      <div class="card-sub" id="cumul-cost">Total: $0</div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="files_indexed">Files Indexed</div>
+      <div class="card-value" id="files-indexed" style="color:var(--accent)">0</div>
+      <div class="card-sub" id="searches-today">Searches: 0</div>
+    </div>
+  </div>
+
+  <!-- Health Breakdown -->
+  <div class="card" style="margin-bottom:20px">
+    <h3 data-i18n="health_breakdown">Health Score Breakdown</h3>
+    <div class="health-detail-grid">
+      <div class="health-detail-card">
+        <div class="health-detail-val" id="hb-gate" style="color:var(--green)">0%</div>
+        <div class="health-detail-label" data-i18n="hb_gate_label">Gate Pass Rate</div>
+        <div class="health-detail-bar"><div class="health-detail-fill" id="hb-gate-bar" style="width:0;background:var(--green)"></div></div>
+      </div>
+      <div class="health-detail-card">
+        <div class="health-detail-val" id="hb-arch" style="color:var(--blue)">0%</div>
+        <div class="health-detail-label" data-i18n="hb_arch_label">Architecture</div>
+        <div class="health-detail-bar"><div class="health-detail-fill" id="hb-arch-bar" style="width:0;background:var(--blue)"></div></div>
+      </div>
+      <div class="health-detail-card">
+        <div class="health-detail-val" id="hb-quality" style="color:var(--accent)">0%</div>
+        <div class="health-detail-label" data-i18n="hb_quality_label">Code Quality</div>
+        <div class="health-detail-bar"><div class="health-detail-fill" id="hb-quality-bar" style="width:0;background:var(--accent)"></div></div>
+      </div>
+      <div class="health-detail-card">
+        <div class="health-detail-val" id="hb-activity" style="color:var(--yellow)">0%</div>
+        <div class="health-detail-label" data-i18n="hb_activity_label">Activity Index</div>
+        <div class="health-detail-bar"><div class="health-detail-fill" id="hb-activity-bar" style="width:0;background:var(--yellow)"></div></div>
+      </div>
+    </div>
+    <div id="tech-debt-list" style="margin-top:16px"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 data-i18n="weekly_trend">Weekly Trend - Gate Runs</h3>
+      <div class="chart-wrap"><canvas id="weeklyChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="recent_gates">Recent Gate Results</h3>
+      <ul class="gate-log" id="gate-log"></ul>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <h3 data-i18n="gate_distribution">Gate Status Distribution</h3>
+      <div class="chart-wrap"><canvas id="gateDonut"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="cost_trend">Weekly Cost Trend</h3>
+      <div class="chart-wrap"><canvas id="costChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="team_activity">Team Activity</h3>
+      <div id="team-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: Gate Analysis -->
+<div class="tab-content" id="tab-gates">
+  <div style="padding:20px 28px;">
+    <div class="card" style="margin-bottom:20px;">
+      <h3 data-i18n="gate_analysis_title" style="font-size:1.15rem;margin-bottom:16px;">Gate Execution History</h3>
+      <div id="gate-history-list" style="max-height:400px;overflow-y:auto;">
+        <div style="text-align:center;padding:40px;color:var(--muted);">
+          <div style="font-size:2rem;margin-bottom:8px;">&#128202;</div>
+          <div data-i18n="gate_history_empty">Run a pipeline to see gate results here</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 data-i18n="gate_stats_title" style="font-size:1.1rem;margin-bottom:16px;">Gate Statistics</h3>
+      <div class="grid" style="padding:0;">
+        <div style="text-align:center;">
+          <div style="font-size:2rem;font-weight:700;color:var(--green);" id="gate-stat-passed">0</div>
+          <div style="font-size:.78rem;color:var(--muted);">Passed</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2rem;font-weight:700;color:var(--yellow);" id="gate-stat-warning">0</div>
+          <div style="font-size:.78rem;color:var(--muted);">Warning</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2rem;font-weight:700;color:var(--red);" id="gate-stat-failed">0</div>
+          <div style="font-size:.78rem;color:var(--muted);">Failed</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:2rem;font-weight:700;color:var(--muted);" id="gate-stat-total">0</div>
+          <div style="font-size:.78rem;color:var(--muted);">Total Runs</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: Onboarding -->
+<div class="tab-content" id="tab-onboarding">
+  <div style="padding:20px 28px;">
+
+    <!-- 0. Project Q&A -->
+    <div class="card ob-section" style="margin-bottom:20px">
+      <h3 data-i18n="qa_title" style="font-size:1.15rem;margin-bottom:14px">Ask About This Project</h3>
+      <div class="qa-box">
+        <input class="qa-input" id="qa-input" type="text"
+               data-placeholder-i18n="qa_placeholder"
+               placeholder="Ask anything about this project..."
+               onkeydown="if(event.key==='Enter')askProjectQuestion()">
+        <button class="btn btn-primary" onclick="askProjectQuestion()" data-i18n="qa_ask_btn" style="padding:10px 20px">Ask</button>
+      </div>
+      <div class="qa-answer" id="qa-answer" style="display:none"></div>
+    </div>
+
+    <!-- 1. Project Overview + Flow Diagram -->
+    <div class="card ob-section">
+      <h3 data-i18n="onboarding_guide" style="font-size:1.15rem;margin-bottom:16px;">Project Onboarding Guide</h3>
+      <p class="ob-desc" id="ob-project-desc"></p>
+      <div class="ob-flow" id="ob-flow"></div>
+    </div>
+
+    <!-- 2. Module Status Cards -->
+    <div class="card ob-section">
+      <h3 data-i18n="ob_modules" style="font-size:1.1rem;margin-bottom:16px;">Module Status</h3>
+      <div class="ob-modules-grid" id="ob-modules"></div>
+    </div>
+
+    <!-- 3. Quick Start Checklist -->
+    <div class="ob-row">
+      <div class="card ob-section" style="flex:1;">
+        <h3 data-i18n="ob_quickstart" style="font-size:1.1rem;margin-bottom:16px;">Quick Start</h3>
+        <div id="ob-checklist"></div>
+      </div>
+
+      <!-- 4. ADR Timeline (visual) -->
+      <div class="card ob-section" style="flex:1;">
+        <h3 data-i18n="adr_timeline" style="font-size:1.1rem;margin-bottom:16px;">ADR Timeline</h3>
+        <div class="ob-timeline" id="adr-timeline"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TAB: Feedback -->
+<div class="tab-content" id="tab-feedback">
+  <div style="padding:20px 28px;">
+    <!-- 요약 통계 카드 -->
+    <div class="fb-summary-row" id="fb-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+    </div>
+    <!-- 실패 패턴 차트 + 실패 이유 (가로 배치) -->
+    <div class="fb-row">
+      <div class="card fb-chart-card">
+        <h3 data-i18n="failure_analysis" style="font-size:1.1rem;margin-bottom:16px;">Failure Pattern Analysis</h3>
+        <div style="height:400px;"><canvas id="failureChart"></canvas></div>
+      </div>
+      <div class="card fb-reason-card">
+        <h3 data-i18n="fb_reasons" style="font-size:1.1rem;margin-bottom:16px;">Failure Details</h3>
+        <div id="failure-reasons"></div>
+      </div>
+    </div>
+    <!-- 상위 실패 메시지 -->
+    <div class="card" style="margin-top:20px;">
+      <h3 style="font-size:1.1rem;margin-bottom:16px;" id="fb-top-msg-title">Top Failure Messages</h3>
+      <div id="fb-top-messages"></div>
+    </div>
+    <!-- 개선 제안 (아래쪽) -->
+    <div class="card" style="margin-top:20px;">
+      <h3 data-i18n="suggestions" style="font-size:1.1rem;margin-bottom:16px;">Improvement Suggestions</h3>
+      <div id="suggestions-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: RAG Search -->
+<div class="tab-content" id="tab-search">
+  <div style="padding:20px 28px;">
+    <!-- DB Stats -->
+    <div class="search-stats" id="rag-stats">
+      <div class="search-stat-card">
+        <div class="search-stat-val" id="rag-total-chunks">--</div>
+        <div class="search-stat-label" data-i18n="rag_chunks">Total Chunks</div>
+      </div>
+      <div class="search-stat-card">
+        <div class="search-stat-val" id="rag-collection">--</div>
+        <div class="search-stat-label" data-i18n="rag_collection">Collection</div>
+      </div>
+      <div class="search-stat-card">
+        <div class="search-stat-val" id="rag-db-status" style="color:var(--green);">--</div>
+        <div class="search-stat-label" data-i18n="rag_status">DB Status</div>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 data-i18n="rag_search_title" style="font-size:1.1rem;margin-bottom:16px;">Codebase Semantic Search</h3>
+      <div class="search-bar">
+        <input class="search-input" id="rag-query" type="text" data-placeholder-i18n="rag_placeholder" placeholder="Search codebase...">
+        <button class="search-submit" id="rag-search-btn" data-i18n="rag_search_btn">Search</button>
+      </div>
+      <div class="search-filters" id="rag-lang-filters">
+        <button class="search-filter-btn active" data-lang-filter="">All</button>
+        <button class="search-filter-btn" data-lang-filter="python">Python</button>
+        <button class="search-filter-btn" data-lang-filter="typescript">TypeScript</button>
+        <button class="search-filter-btn" data-lang-filter="markdown">Markdown</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="rag-results">
+      <div class="search-empty">
+        <div class="search-empty-icon">&#128269;</div>
+        <div class="search-empty-text" data-i18n="rag_empty">Enter a query to search your codebase</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: Pipeline Runner (M3) -->
+<div class="tab-content" id="tab-pipeline">
+  <div style="padding:20px 28px;">
+    <div class="card" style="margin-bottom:20px;">
+      <h3 data-i18n="pipeline_runner_title" style="font-size:1.15rem;margin-bottom:16px;">6-Gate Pipeline Runner</h3>
+      <div class="pipeline-runner">
+        <input class="pipeline-input" id="pipeline-file" type="text" placeholder="src/layer2_rag/vector_db.py" data-placeholder-i18n="pipeline_placeholder">
+        <input class="pipeline-input" id="pipeline-author" type="text" placeholder="author" style="max-width:140px;" data-placeholder-i18n="pipeline_author_ph">
+        <button class="pipeline-btn pipeline-btn-run" id="pipeline-run-btn" data-i18n="pipeline_run_btn">Run Pipeline</button>
+        <button class="pipeline-btn pipeline-btn-bypass" id="pipeline-bypass-btn" title="Bypass mode (hotfix)">Bypass</button>
+      </div>
+      <div id="pipeline-progress" style="display:none;text-align:center;padding:20px;color:var(--muted);">
+        <div style="font-size:1.5rem;margin-bottom:8px;">&#9881;</div>
+        <div data-i18n="pipeline_running">Running 6-Gate pipeline...</div>
+      </div>
+      <div id="pipeline-results"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <h3 data-i18n="pipeline_status" style="font-size:1.1rem;margin-bottom:20px;">6-Gate Pipeline Status</h3>
+      <div style="height:720px;max-width:860px;margin:0 auto;"><canvas id="gatePipelineChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="arch_layers" style="font-size:1.1rem;margin-bottom:20px;">Architecture Layers - Live Status</h3>
+      <div class="layer-status-grid" id="layer-status-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: Collaboration (M3) -->
+<div class="tab-content" id="tab-collab">
+  <div style="padding:20px 28px;">
+    <!-- Work Zone -->
+    <div class="card" style="margin-bottom:20px;">
+      <h3 data-i18n="wz_title" style="font-size:1.15rem;margin-bottom:16px;">Work Zone - Team Activity</h3>
+      <div class="wz-declare">
+        <input type="text" id="wz-author" placeholder="Author" data-placeholder-i18n="wz_author_ph">
+        <input type="text" id="wz-files" placeholder="file1.py, file2.py" style="flex:2;" data-placeholder-i18n="wz_files_ph">
+        <input type="text" id="wz-desc" placeholder="Description (optional)" style="flex:1.5;" data-placeholder-i18n="wz_desc_ph">
+        <button id="wz-declare-btn" data-i18n="wz_declare_btn">Declare</button>
+      </div>
+      <div id="wz-zones" style="margin-top:16px;"></div>
+    </div>
+
+    <!-- Decision Extractor -->
+    <div class="card">
+      <h3 data-i18n="de_title" style="font-size:1.15rem;margin-bottom:16px;">Decision Extractor</h3>
+      <textarea class="de-textarea" id="de-text" data-placeholder-i18n="de_placeholder" placeholder="Paste conversation or meeting notes to extract design decisions..."></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px;align-items:center;">
+        <button class="pipeline-btn pipeline-btn-run" id="de-extract-btn" data-i18n="de_extract_btn">Extract Decisions</button>
+        <label style="font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:6px;">
+          <input type="checkbox" id="de-auto-save"> <span data-i18n="de_auto_save">Auto-save as ADR</span>
+        </label>
+      </div>
+      <div id="de-results" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// i18n - Korean / English Translation System
+// ================================================================
+const I18N = {
+  ko: {
+    header_title: '팀 인텔리전스 대시보드',
+    tab_overview: '개요',
+    tab_gates: 'Gate 분석',
+    tab_onboarding: '온보딩',
+    tab_feedback: '피드백 루프',
+    health_score: '프로젝트 건강 점수',
+    gate_pass_rate: 'Gate 통과율',
+    ai_cost_today: 'AI 비용 (오늘)',
+    files_indexed: '인덱싱된 파일',
+    weekly_trend: '주간 추이 - Gate 실행',
+    recent_gates: '최근 Gate 결과',
+    gate_distribution: 'Gate 상태 분포',
+    cost_trend: '주간 비용 추이',
+    team_activity: '팀 활동 현황',
+    pipeline_status: '6-Gate 파이프라인 상태',
+    arch_layers: '아키텍처 레이어 - 실시간 상태',
+    onboarding_guide: '프로젝트 온보딩 가이드',
+    adr_timeline: 'ADR 타임라인',
+    failure_analysis: '실패 패턴 분석',
+    suggestions: '개선 제안',
+    loading: '로딩 중...',
+    connecting: '연결 중...',
+    live: '실시간',
+    reconnecting: '재연결 중...',
+    demo_mode: '데모 모드',
+    updated: '업데이트',
+    today: '오늘',
+    total: '누적',
+    runs: '회 실행',
+    searches: '검색',
+    no_team: '아직 팀 활동이 없습니다',
+    no_adr: 'ADR이 아직 없습니다',
+    no_data: '데이터 없음',
+    no_suggestions: '제안 없음 - 시스템 양호',
+    files: '파일',
+    gates: 'gate',
+    passed: '통과',
+    failed: '실패',
+    warning: '경고',
+    cost_label: '비용 ($)',
+    failures_label: '실패 횟수',
+    pass_rate_label: '통과율 %',
+    getting_started: '시작하기',
+    cli_commands: 'CLI 명령어',
+    layer1: '구조화된 프롬프트 (PACT-D)',
+    layer2: 'RAG 메모리 엔진',
+    layer3: '멀티 에이전트 품질 게이트',
+    layer4: '협업 오케스트레이터',
+    layer5: '팀 인텔리전스 대시보드',
+    onboard_desc: 'AI 바이브 코딩 품질을 보장하는 5-Layer 아키텍처',
+    step1: '1. Python 3.10+ 환경 확인',
+    step2: '2. pip install -r requirements.txt',
+    step3: '3. python cli.py index . (코드베이스 인덱싱)',
+    step4: '4. python cli.py pipeline <파일> (6-Gate 실행)',
+    step5: '5. python server.py (대시보드 서버 시작)',
+    no_fail_pattern: '현재 패턴: 반복 실패 감지 없음 - 양호',
+    fb_reasons: '실패 상세 원인',
+    fb_no_failures: '실패 이력이 없습니다 - 양호한 상태입니다',
+    fb_times: '회',
+    ob_modules: '모듈 현황',
+    ob_quickstart: '빠른 시작 가이드',
+    ob_project_desc: 'VIBE-X는 AI 바이브 코딩의 품질을 체계적으로 보장하는 5-Layer 통합 협업 플랫폼입니다. 구조화된 프롬프트부터 실시간 대시보드까지, 코드 생성의 전체 라이프사이클을 관리합니다.',
+    ob_files: '파일',
+    ob_modules_label: '모듈',
+    login_title: '로그인',
+    login_username: '아이디',
+    login_password: '비밀번호',
+    login_btn: '로그인',
+    login_error: '아이디 또는 비밀번호가 올바르지 않습니다',
+    logout_btn: '로그아웃',
+    user_manage: '사용자 관리',
+    user_add: '사용자 추가',
+    user_name: '이름',
+    user_email: '이메일',
+    user_role: '역할',
+    user_status: '상태',
+    user_active: '활성',
+    user_inactive: '비활성',
+    welcome: '환영합니다',
+    role_admin: '관리자',
+    role_lead: '팀 리드',
+    role_developer: '개발자',
+    role_viewer: '뷰어',
+    add_user_title: '새 사용자 등록',
+    add_user_btn: '등록',
+    cancel_btn: '취소',
+    user_actions: '관리',
+    btn_edit: '수정',
+    btn_save: '저장',
+    btn_deactivate: '비활성화',
+    btn_activate: '활성화',
+    btn_reset_pw: '비밀번호 초기화',
+    confirm_deactivate: '이 사용자를 비활성화하시겠습니까?',
+    confirm_activate: '이 사용자를 활성화하시겠습니까?',
+    new_password: '새 비밀번호 (6자 이상)',
+    edit_info: '정보 수정',
+    no_self_deactivate: '자기 자신은 비활성화할 수 없습니다',
+    btn_delete: '삭제',
+    confirm_delete: '이 사용자를 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+    tab_search: 'RAG 검색',
+    tab_pipeline: '파이프라인',
+    tab_collab: '협업',
+    pipeline_runner_title: '6-Gate 파이프라인 실행',
+    pipeline_placeholder: '파일 경로 (예: src/layer2_rag/vector_db.py)',
+    pipeline_author_ph: '작업자',
+    pipeline_run_btn: '파이프라인 실행',
+    pipeline_running: '6-Gate 파이프라인 실행 중...',
+    pipeline_overall_passed: '전체 파이프라인 통과',
+    pipeline_overall_warning: '파이프라인 경고 발생',
+    pipeline_overall_failed: '파이프라인 실패',
+    gate_analysis_title: 'Gate 실행 이력',
+    gate_history_empty: '파이프라인을 실행하면 결과가 여기에 표시됩니다',
+    gate_stats_title: 'Gate 통계',
+    wz_title: 'Work Zone - 팀 작업 현황',
+    wz_author_ph: '작업자 이름',
+    wz_files_ph: '파일1.py, 파일2.py',
+    wz_desc_ph: '작업 설명 (선택)',
+    wz_declare_btn: '영역 선언',
+    wz_empty: '활성 작업 영역이 없습니다',
+    wz_release: '해제',
+    wz_conflict_warn: '충돌 감지!',
+    de_title: '설계 결정 추출기',
+    de_placeholder: '대화 로그 또는 미팅 노트를 붙여넣어 설계 결정을 추출합니다...',
+    de_extract_btn: '결정 추출',
+    de_auto_save: 'ADR로 자동 저장',
+    de_no_decisions: '추출된 설계 결정이 없습니다',
+    de_saved_adr: 'ADR로 저장됨',
+    rag_search_title: '코드베이스 시맨틱 검색',
+    rag_placeholder: '자연어로 코드 검색... (예: 인증 처리 함수)',
+    rag_search_btn: '검색',
+    rag_empty: '검색어를 입력하면 코드베이스에서 관련 코드를 찾습니다',
+    rag_no_results: '검색 결과가 없습니다. 다른 키워드로 시도해보세요.',
+    rag_chunks: '총 청크 수',
+    rag_collection: '컬렉션',
+    rag_status: 'DB 상태',
+    rag_results_count: '개 결과',
+    rag_searching: '검색 중...',
+    rag_lines: '라인',
+    rag_reindex: '재인덱싱',
+    rag_reindexing: '인덱싱 중...',
+    health_breakdown: '건강 점수 세부 항목',
+    hb_gate_label: 'Gate 통과율',
+    hb_arch_label: '아키텍처 일관성',
+    hb_quality_label: '코드 품질',
+    hb_activity_label: '활동 지수',
+    tech_debt_title: '기술 부채',
+    tech_debt_empty: '감지된 기술 부채 없음 - 양호',
+    qa_title: '프로젝트 질의응답',
+    qa_placeholder: '이 프로젝트에 대해 무엇이든 물어보세요...',
+    qa_ask_btn: '질문',
+    qa_no_answer: '관련 정보를 찾지 못했습니다.',
+    alert_no_alerts: '알림 없음',
+    alert_dismiss_all: '모두 확인',
+  },
+  en: {
+    header_title: 'Team Intelligence Dashboard',
+    tab_overview: 'Overview',
+    tab_gates: 'Gate Analysis',
+    tab_onboarding: 'Onboarding',
+    tab_feedback: 'Feedback Loop',
+    health_score: 'Health Score',
+    gate_pass_rate: 'Gate Pass Rate',
+    ai_cost_today: 'AI Cost (Today)',
+    files_indexed: 'Files Indexed',
+    weekly_trend: 'Weekly Trend - Gate Runs',
+    recent_gates: 'Recent Gate Results',
+    gate_distribution: 'Gate Status Distribution',
+    cost_trend: 'Weekly Cost Trend',
+    team_activity: 'Team Activity',
+    pipeline_status: '6-Gate Pipeline Status',
+    arch_layers: 'Architecture Layers - Live Status',
+    onboarding_guide: 'Project Onboarding Guide',
+    adr_timeline: 'ADR Timeline',
+    failure_analysis: 'Failure Pattern Analysis',
+    suggestions: 'Improvement Suggestions',
+    loading: 'Loading...',
+    connecting: 'Connecting...',
+    live: 'Live',
+    reconnecting: 'Reconnecting...',
+    demo_mode: 'Demo Mode',
+    updated: 'Updated',
+    today: 'Today',
+    total: 'Total',
+    runs: 'runs',
+    searches: 'Searches',
+    no_team: 'No team activity yet',
+    no_adr: 'No ADRs yet',
+    no_data: 'No data',
+    no_suggestions: 'No suggestions - system is healthy',
+    files: 'files',
+    gates: 'gates',
+    passed: 'Passed',
+    failed: 'Failed',
+    warning: 'Warning',
+    cost_label: 'Cost ($)',
+    failures_label: 'Failures',
+    pass_rate_label: 'Pass Rate %',
+    getting_started: 'Getting Started',
+    cli_commands: 'CLI Commands',
+    layer1: 'Structured Prompts (PACT-D)',
+    layer2: 'RAG Memory Engine',
+    layer3: 'Multi-Agent Quality Gate',
+    layer4: 'Collaboration Orchestrator',
+    layer5: 'Team Intelligence Dashboard',
+    onboard_desc: '5-Layer architecture ensuring AI vibe coding quality',
+    step1: '1. Verify Python 3.10+ environment',
+    step2: '2. pip install -r requirements.txt',
+    step3: '3. python cli.py index . (index codebase)',
+    step4: '4. python cli.py pipeline <file> (run 6-Gate)',
+    step5: '5. python server.py (start dashboard server)',
+    no_fail_pattern: 'Current pattern: No recurring failures detected - Good status',
+    fb_reasons: 'Failure Details',
+    fb_no_failures: 'No failure history - system is healthy',
+    fb_times: 'times',
+    ob_modules: 'Module Status',
+    ob_quickstart: 'Quick Start Guide',
+    ob_project_desc: 'VIBE-X is a 5-Layer integrated collaboration platform that systematically ensures AI vibe coding quality. It manages the entire code generation lifecycle from structured prompts to real-time dashboards.',
+    ob_files: 'files',
+    ob_modules_label: 'modules',
+    login_title: 'Login',
+    login_username: 'Username',
+    login_password: 'Password',
+    login_btn: 'Login',
+    login_error: 'Invalid username or password',
+    logout_btn: 'Logout',
+    user_manage: 'User Management',
+    user_add: 'Add User',
+    user_name: 'Name',
+    user_email: 'Email',
+    user_role: 'Role',
+    user_status: 'Status',
+    user_active: 'Active',
+    user_inactive: 'Inactive',
+    welcome: 'Welcome',
+    role_admin: 'Admin',
+    role_lead: 'Team Lead',
+    role_developer: 'Developer',
+    role_viewer: 'Viewer',
+    add_user_title: 'Register New User',
+    add_user_btn: 'Register',
+    cancel_btn: 'Cancel',
+    user_actions: 'Actions',
+    btn_edit: 'Edit',
+    btn_save: 'Save',
+    btn_deactivate: 'Deactivate',
+    btn_activate: 'Activate',
+    btn_reset_pw: 'Reset Password',
+    confirm_deactivate: 'Deactivate this user?',
+    confirm_activate: 'Activate this user?',
+    new_password: 'New password (6+ chars)',
+    edit_info: 'Edit Info',
+    no_self_deactivate: 'Cannot deactivate yourself',
+    btn_delete: 'Delete',
+    confirm_delete: 'Permanently delete this user? This cannot be undone.',
+    tab_search: 'RAG Search',
+    tab_pipeline: 'Pipeline',
+    tab_collab: 'Collaboration',
+    pipeline_runner_title: '6-Gate Pipeline Runner',
+    pipeline_placeholder: 'File path (e.g. src/layer2_rag/vector_db.py)',
+    pipeline_author_ph: 'Author',
+    pipeline_run_btn: 'Run Pipeline',
+    pipeline_running: 'Running 6-Gate pipeline...',
+    pipeline_overall_passed: 'Pipeline passed',
+    pipeline_overall_warning: 'Pipeline warnings detected',
+    pipeline_overall_failed: 'Pipeline failed',
+    gate_analysis_title: 'Gate Execution History',
+    gate_history_empty: 'Run a pipeline to see gate results here',
+    gate_stats_title: 'Gate Statistics',
+    wz_title: 'Work Zone - Team Activity',
+    wz_author_ph: 'Author name',
+    wz_files_ph: 'file1.py, file2.py',
+    wz_desc_ph: 'Description (optional)',
+    wz_declare_btn: 'Declare',
+    wz_empty: 'No active work zones',
+    wz_release: 'Release',
+    wz_conflict_warn: 'Conflict detected!',
+    de_title: 'Decision Extractor',
+    de_placeholder: 'Paste conversation or meeting notes to extract design decisions...',
+    de_extract_btn: 'Extract Decisions',
+    de_auto_save: 'Auto-save as ADR',
+    de_no_decisions: 'No design decisions found',
+    de_saved_adr: 'Saved as ADR',
+    rag_search_title: 'Codebase Semantic Search',
+    rag_placeholder: 'Search codebase in natural language...',
+    rag_search_btn: 'Search',
+    rag_empty: 'Enter a query to search your codebase',
+    rag_no_results: 'No results found. Try different keywords.',
+    rag_chunks: 'Total Chunks',
+    rag_collection: 'Collection',
+    rag_status: 'DB Status',
+    rag_results_count: 'results',
+    rag_searching: 'Searching...',
+    rag_lines: 'lines',
+    rag_reindex: 'Re-index',
+    rag_reindexing: 'Indexing...',
+    health_breakdown: 'Health Score Breakdown',
+    hb_gate_label: 'Gate Pass Rate',
+    hb_arch_label: 'Architecture',
+    hb_quality_label: 'Code Quality',
+    hb_activity_label: 'Activity Index',
+    tech_debt_title: 'Tech Debt',
+    tech_debt_empty: 'No tech debt detected - healthy',
+    qa_title: 'Ask About This Project',
+    qa_placeholder: 'Ask anything about this project...',
+    qa_ask_btn: 'Ask',
+    qa_no_answer: 'Could not find relevant information.',
+    alert_no_alerts: 'No alerts',
+    alert_dismiss_all: 'Dismiss All',
+  }
+};
+
+let currentLang = localStorage.getItem('vibe-x-lang') || 'ko';
+
+// ================================================================
+// Authentication System
+// ================================================================
+let authToken = localStorage.getItem('vibe-x-token') || '';
+let currentUser = null;
+
+const API_BASE = window.location.origin;
+
+async function authFetch(url, options = {}) {
+  if (authToken) {
+    options.headers = { ...options.headers, 'Authorization': 'Bearer ' + authToken };
+  }
+  if (options.body && typeof options.body === 'object') {
+    options.headers = { ...options.headers, 'Content-Type': 'application/json' };
+    options.body = JSON.stringify(options.body);
+  }
+  return fetch(API_BASE + url, options);
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value.trim();
+  const errorEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if (!username || !password) return;
+  btn.disabled = true;
+  errorEl.textContent = '';
+
+  try {
+    const r = await fetch(API_BASE + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await r.json();
+
+    if (data.success) {
+      authToken = data.token;
+      currentUser = data.user;
+      localStorage.setItem('vibe-x-token', authToken);
+      showDashboard();
+    } else {
+      errorEl.textContent = t('login_error');
+    }
+  } catch (e) {
+    errorEl.textContent = 'Connection error';
+  }
+  btn.disabled = false;
+}
+
+function doLogout() {
+  authFetch('/api/auth/logout', { method: 'POST' });
+  authToken = '';
+  currentUser = null;
+  localStorage.removeItem('vibe-x-token');
+  clearInterval(window._sessionChecker);
+  document.getElementById('login-overlay').classList.remove('hidden');
+  document.getElementById('user-badge').style.display = 'none';
+  document.getElementById('header-logout-btn').style.display = 'none';
+  document.getElementById('user-modal').classList.add('hidden');
+  document.getElementById('login-user').value = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+function showDashboard() {
+  document.getElementById('login-overlay').classList.add('hidden');
+  const badge = document.getElementById('user-badge');
+  badge.style.display = 'flex';
+  document.getElementById('header-logout-btn').style.display = 'inline-block';
+
+  const name = currentUser?.display_name || currentUser?.username || '?';
+  document.getElementById('user-display-name').textContent = name;
+
+  const roleKey = 'role_' + (currentUser?.role || 'viewer');
+  document.getElementById('user-role-tag').textContent = t(roleKey);
+
+  const initials = name.split(' ').map(s => s[0]).join('').toUpperCase().slice(0, 2);
+  document.getElementById('user-avatar').textContent = initials || '?';
+
+  // 세션 만료 자동 체크 (5분마다)
+  clearInterval(window._sessionChecker);
+  window._sessionChecker = setInterval(async () => {
+    try {
+      const r = await authFetch('/api/auth/me');
+      const data = await r.json();
+      if (!data.success) {
+        clearInterval(window._sessionChecker);
+        alert(currentLang === 'ko' ? '세션이 만료되었습니다. 다시 로그인해주세요.' : 'Session expired. Please login again.');
+        doLogout();
+      }
+    } catch {}
+  }, 5 * 60 * 1000);
+}
+
+async function checkSession() {
+  if (!authToken) return false;
+  try {
+    const r = await authFetch('/api/auth/me');
+    const data = await r.json();
+    if (data.success) {
+      currentUser = data.user;
+      showDashboard();
+      return true;
+    }
+  } catch {}
+  localStorage.removeItem('vibe-x-token');
+  authToken = '';
+  return false;
+}
+
+// User Management
+async function openUserModal() {
+  document.getElementById('user-menu').classList.remove('show');
+  const canManage = currentUser && (currentUser.role === 'admin' || currentUser.role === 'lead');
+  if (!canManage) return;
+
+  document.getElementById('user-modal').classList.remove('hidden');
+  await loadUserList();
+}
+
+async function loadUserList() {
+  try {
+    const r = await authFetch('/api/auth/users');
+    const data = await r.json();
+    if (!data.success) return;
+
+    const tbody = document.getElementById('user-table-body');
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    const isLead = currentUser && currentUser.role === 'lead';
+    const canManage = isAdmin || isLead;
+
+    tbody.innerHTML = data.users.map(u => {
+      const roleClass = u.role;
+      const roleLabel = t('role_' + u.role);
+      const statusLabel = u.is_active ? t('user_active') : t('user_inactive');
+      const statusColor = u.is_active ? 'var(--green)' : 'var(--red)';
+      const isSelf = currentUser && currentUser.username === u.username;
+      const isDefaultAdmin = u.username === 'admin';
+
+      // Action buttons
+      let actions = '';
+      if (canManage) {
+        // Edit button
+        actions += `<button class="action-btn edit" onclick="startEditUser('${u.username}')" title="${t('btn_edit')}">&#9998;</button>`;
+        // Toggle active/inactive (not for self or default admin)
+        if (!isSelf && !isDefaultAdmin) {
+          if (u.is_active) {
+            actions += `<button class="action-btn deact" onclick="toggleUserActive('${u.username}', false)" title="${t('btn_deactivate')}">&#10006;</button>`;
+          } else {
+            actions += `<button class="action-btn act" onclick="toggleUserActive('${u.username}', true)" title="${t('btn_activate')}">&#10004;</button>`;
+          }
+        }
+        // Reset password (admin only)
+        if (isAdmin && !isSelf) {
+          actions += `<button class="action-btn pw" onclick="resetUserPassword('${u.username}')" title="${t('btn_reset_pw')}">&#128273;</button>`;
+        }
+        // Delete (admin only, not self, not default admin)
+        if (isAdmin && !isSelf && !isDefaultAdmin) {
+          actions += `<button class="action-btn del" onclick="deleteUser('${u.username}')" title="${t('btn_delete')}">&#128465;</button>`;
+        }
+      }
+
+      // Role selector for editing
+      const roleOptions = ['admin','lead','developer','viewer'].map(r =>
+        `<option value="${r}" ${r === u.role ? 'selected' : ''}>${t('role_' + r)}</option>`
+      ).join('');
+
+      return `<tr id="row-${u.username}">
+        <td><strong>${u.username}</strong></td>
+        <td>
+          <span class="display-val" id="dn-val-${u.username}">${u.display_name || '-'}</span>
+          <input class="edit-input hidden" id="dn-edit-${u.username}" value="${u.display_name || ''}" placeholder="Name">
+        </td>
+        <td>
+          <span class="display-val" id="em-val-${u.username}" style="color:var(--muted)">${u.email || '-'}</span>
+          <input class="edit-input hidden" id="em-edit-${u.username}" value="${u.email || ''}" placeholder="Email">
+        </td>
+        <td>
+          <span class="display-val" id="rl-val-${u.username}"><span class="role-badge ${roleClass}">${roleLabel}</span></span>
+          <select class="edit-input hidden" id="rl-edit-${u.username}">${roleOptions}</select>
+        </td>
+        <td style="color:${statusColor}">${statusLabel}</td>
+        <td class="actions-cell">${actions}</td>
+      </tr>`;
+    }).join('');
+  } catch {}
+}
+
+// 인라인 편집 시작
+function startEditUser(username) {
+  const row = document.getElementById('row-' + username);
+  if (!row) return;
+
+  // 이미 편집 모드인지 확인
+  const dnEdit = document.getElementById('dn-edit-' + username);
+  if (!dnEdit.classList.contains('hidden')) {
+    // 저장 모드
+    saveEditUser(username);
+    return;
+  }
+
+  // 편집 모드로 전환
+  ['dn', 'em', 'rl'].forEach(prefix => {
+    const val = document.getElementById(prefix + '-val-' + username);
+    const edit = document.getElementById(prefix + '-edit-' + username);
+    if (val) val.classList.add('hidden');
+    if (edit) edit.classList.remove('hidden');
+  });
+}
+
+// 인라인 편집 저장
+async function saveEditUser(username) {
+  const newName = document.getElementById('dn-edit-' + username)?.value.trim();
+  const newEmail = document.getElementById('em-edit-' + username)?.value.trim();
+  const newRole = document.getElementById('rl-edit-' + username)?.value;
+
+  // 정보 수정 (이름, 이메일)
+  await authFetch('/api/auth/update-user', {
+    method: 'POST',
+    body: { username, display_name: newName, email: newEmail },
+  });
+
+  // 역할 변경
+  await authFetch('/api/auth/role', {
+    method: 'POST',
+    body: { username, role: newRole },
+  });
+
+  await loadUserList();
+}
+
+// 사용자 활성/비활성 토글
+async function toggleUserActive(username, activate) {
+  const msg = activate ? t('confirm_activate') : t('confirm_deactivate');
+  if (!confirm(msg)) return;
+
+  const endpoint = activate ? '/api/auth/activate' : '/api/auth/deactivate';
+  const r = await authFetch(endpoint, {
+    method: 'POST',
+    body: { username },
+  });
+  const data = await r.json();
+  if (!data.success) {
+    alert(data.error || 'Failed');
+    return;
+  }
+  await loadUserList();
+}
+
+// 사용자 삭제
+async function deleteUser(username) {
+  if (!confirm(t('confirm_delete'))) return;
+  const r = await authFetch('/api/auth/delete', {
+    method: 'POST',
+    body: { username },
+  });
+  const data = await r.json();
+  if (data.success) {
+    await loadUserList();
+  } else {
+    alert(data.error || 'Failed');
+  }
+}
+
+// 비밀번호 초기화
+async function resetUserPassword(username) {
+  const newPw = prompt(t('new_password'));
+  if (!newPw) return;
+  if (newPw.length < 6) {
+    alert(t('login_error'));
+    return;
+  }
+  const r = await authFetch('/api/auth/reset-password', {
+    method: 'POST',
+    body: { username, new_password: newPw },
+  });
+  const data = await r.json();
+  if (data.success) {
+    alert('OK');
+  } else {
+    alert(data.error || 'Failed');
+  }
+}
+
+async function addUser() {
+  const username = document.getElementById('new-username').value.trim();
+  const display = document.getElementById('new-display').value.trim();
+  const email = document.getElementById('new-email').value.trim();
+  const password = document.getElementById('new-password').value;
+  const role = document.getElementById('new-role').value;
+
+  if (!username || !password) return;
+
+  try {
+    const r = await authFetch('/api/auth/register', {
+      method: 'POST',
+      body: { username, password, role, display_name: display, email },
+    });
+    const data = await r.json();
+    if (data.success) {
+      document.getElementById('add-user-form').classList.remove('show');
+      document.getElementById('new-username').value = '';
+      document.getElementById('new-display').value = '';
+      document.getElementById('new-email').value = '';
+      document.getElementById('new-password').value = '';
+      await loadUserList();
+    } else {
+      alert(data.error || 'Failed');
+    }
+  } catch {}
+}
+
+function t(key) {
+  return I18N[currentLang]?.[key] || I18N['en']?.[key] || key;
+}
+
+function applyLanguage() {
+  document.documentElement.lang = currentLang;
+
+  // data-i18n 속성이 있는 모든 요소 번역
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+
+  // 토글 버튼 상태
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === currentLang);
+  });
+
+  // 차트 라벨 업데이트
+  updateChartLabels();
+
+  // 아키텍처 레이어 리스트 갱신
+  renderLayerList();
+
+  // 로그인 화면 placeholder 업데이트
+  const luEl = document.getElementById('login-user');
+  const lpEl = document.getElementById('login-pass');
+  if (luEl) luEl.placeholder = t('login_username');
+  if (lpEl) lpEl.placeholder = t('login_password');
+
+  // data-placeholder-i18n 속성이 있는 모든 input/textarea 번역
+  document.querySelectorAll('[data-placeholder-i18n]').forEach(el => {
+    const key = el.dataset.placeholderI18n;
+    if (key) el.placeholder = t(key);
+  });
+
+  // 사용자 역할 표시 업데이트
+  if (currentUser) {
+    const roleKey = 'role_' + (currentUser.role || 'viewer');
+    const rtEl = document.getElementById('user-role-tag');
+    if (rtEl) rtEl.textContent = t(roleKey);
+  }
+
+  // 동적 콘텐츠 갱신 (대시보드 먼저 → 온보딩/피드백은 대시보드 데이터 활용)
+  fetchDashboard().then(() => {
+    fetchOnboarding();
+    fetchFeedback();
+    fetchHealthBreakdown();
+    evaluateAlerts();
+  });
+}
+
+function switchLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem('vibe-x-lang', lang);
+  applyLanguage();
+}
+
+// ================================================================
+// Core
+// ================================================================
+const API = '';
+let ws = null;
+let charts = {};
+let _lastGatePassRates = [0,0,0,0,0,0];
+let _lastDashboardData = null;
+
+// Tab management
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'pipeline' && charts.pipeline) {
+      charts.pipeline.resize();
+    }
+  });
+});
+
+// Language toggle
+document.getElementById('lang-toggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('.lang-btn');
+  if (btn && btn.dataset.lang) {
+    switchLanguage(btn.dataset.lang);
+  }
+});
+
+// ================================================================
+// Auth Event Listeners
+// ================================================================
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('login-pass').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('login-user').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('login-pass').focus();
+});
+
+// User badge menu toggle
+document.getElementById('user-badge').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('user-menu').classList.toggle('show');
+});
+document.addEventListener('click', () => {
+  document.getElementById('user-menu').classList.remove('show');
+});
+document.getElementById('menu-logout').addEventListener('click', doLogout);
+document.getElementById('header-logout-btn').addEventListener('click', doLogout);
+document.getElementById('menu-users').addEventListener('click', openUserModal);
+
+// User modal
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+  document.getElementById('user-modal').classList.add('hidden');
+});
+document.getElementById('show-add-form-btn').addEventListener('click', () => {
+  document.getElementById('add-user-form').classList.toggle('show');
+});
+document.getElementById('add-user-btn').addEventListener('click', addUser);
+document.getElementById('cancel-add-btn').addEventListener('click', () => {
+  document.getElementById('add-user-form').classList.remove('show');
+});
+
+// Auto-check session on load
+checkSession();
+
+// Chart defaults
+Chart.defaults.color = '#8b8fa3';
+Chart.defaults.borderColor = '#2a2d3a';
+Chart.defaults.font.family = "'Segoe UI', sans-serif";
+
+function initCharts() {
+  charts.weekly = new Chart(document.getElementById('weeklyChart'), {
+    type: 'bar',
+    data: { labels: [], datasets: [
+      { label: t('passed'), data: [], backgroundColor: '#00d2a0', borderRadius: 4 },
+      { label: t('failed'), data: [], backgroundColor: '#ff6b6b', borderRadius: 4 },
+    ]},
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }},
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true }}}
+  });
+
+  charts.donut = new Chart(document.getElementById('gateDonut'), {
+    type: 'doughnut',
+    data: { labels: [t('passed'), t('failed'), t('warning')],
+      datasets: [{ data: [0,0,0], backgroundColor: ['#00d2a0','#ff6b6b','#ffd93d'], borderWidth: 0 }]},
+    options: { responsive: true, maintainAspectRatio: false, cutout: '65%',
+      plugins: { legend: { position: 'bottom' }}}
+  });
+
+  charts.cost = new Chart(document.getElementById('costChart'), {
+    type: 'line',
+    data: { labels: [], datasets: [
+      { label: t('cost_label'), data: [], borderColor: '#ffd93d', backgroundColor: 'rgba(255,217,61,.1)',
+        fill: true, tension: .4, pointRadius: 3 }
+    ]},
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true }}}
+  });
+
+  charts.pipeline = new Chart(document.getElementById('gatePipelineChart'), {
+    type: 'radar',
+    data: {
+      labels: ['Gate 1\nSyntax','Gate 2\nRules','Gate 3\nIntegration','Gate 4\nReview','Gate 5\nArchitecture','Gate 6\nCollision'],
+      datasets: [{
+        label: t('pass_rate_label'),
+        data: [100, 80, 70, 75, 90, 95],
+        backgroundColor: 'rgba(108,92,231,.2)',
+        borderColor: '#6c5ce7',
+        borderWidth: 4,
+        pointBackgroundColor: '#6c5ce7',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointRadius: 10,
+        pointHoverRadius: 14,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 20, weight: '600' }, padding: 24 } },
+        tooltip: { titleFont: { size: 16 }, bodyFont: { size: 15 }, padding: 12 },
+      },
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 25, font: { size: 17, weight: '500' }, backdropPadding: 6, backdropColor: 'rgba(30,30,50,.7)', color: '#ddd' },
+          pointLabels: { font: { size: 20, weight: '700' }, padding: 22, color: '#e0e0e0' },
+          grid: { lineWidth: 1.5 },
+          angleLines: { lineWidth: 1.5 },
+        }
+      }
+    }
+  });
+
+  charts.failure = new Chart(document.getElementById('failureChart'), {
+    type: 'bar',
+    data: { labels: [], datasets: [
+      { label: t('failures_label'), data: [], backgroundColor: '#ff6b6b', borderRadius: 6, barThickness: 28 }
+    ]},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { labels: { font: { size: 14 }, padding: 16 } },
+      },
+      scales: {
+        x: { beginAtZero: true, ticks: { font: { size: 13 } } },
+        y: { ticks: { font: { size: 14, weight: '600' } } },
+      }
+    }
+  });
+}
+
+function updateChartLabels() {
+  if (!charts.weekly) return;
+
+  charts.weekly.data.datasets[0].label = t('passed');
+  charts.weekly.data.datasets[1].label = t('failed');
+  charts.weekly.update();
+
+  charts.donut.data.labels = [t('passed'), t('failed'), t('warning')];
+  charts.donut.update();
+
+  charts.cost.data.datasets[0].label = t('cost_label');
+  charts.cost.update();
+
+  charts.pipeline.data.datasets[0].label = t('pass_rate_label');
+  charts.pipeline.update();
+
+  charts.failure.data.datasets[0].label = t('failures_label');
+  charts.failure.update();
+}
+
+// Layer 실시간 상태 데이터
+const layerStatusData = {
+  1: { modules: 3, status: 'active', detail_ko: 'PACT-D 템플릿 활성', detail_en: 'PACT-D template active' },
+  2: { modules: 6, status: 'active', detail_ko: 'ChromaDB 인덱싱 정상', detail_en: 'ChromaDB indexing OK' },
+  3: { modules: 5, status: 'active', detail_ko: '6-Gate 파이프라인 가동', detail_en: '6-Gate pipeline running' },
+  4: { modules: 3, status: 'active', detail_ko: 'MCP 서버 대기 중', detail_en: 'MCP server standby' },
+  5: { modules: 4, status: 'active', detail_ko: '대시보드 서빙 중', detail_en: 'Dashboard serving' },
+};
+
+function renderLayerList() {
+  const grid = document.getElementById('layer-status-grid');
+  if (!grid) return;
+
+  const layers = [
+    { n: 1, k: 'layer1' },
+    { n: 2, k: 'layer2' },
+    { n: 3, k: 'layer3' },
+    { n: 4, k: 'layer4' },
+    { n: 5, k: 'layer5' },
+  ];
+
+  grid.innerHTML = layers.map(l => {
+    const s = layerStatusData[l.n];
+    const indicatorCls = s.status === 'active' ? 'active' : s.status === 'warn' ? 'warn' : 'idle';
+    const statusLabel = currentLang === 'ko'
+      ? (s.status === 'active' ? '정상' : s.status === 'warn' ? '경고' : '대기')
+      : (s.status === 'active' ? 'OK' : s.status === 'warn' ? 'Warn' : 'Idle');
+    const detail = currentLang === 'ko' ? s.detail_ko : s.detail_en;
+    const modulesLabel = currentLang === 'ko' ? `${s.modules}개 모듈` : `${s.modules} modules`;
+
+    return `<div class="layer-card">
+      <div class="layer-card-header">
+        <span class="layer-num">${l.n}</span>
+        <span class="layer-name">${t(l.k)}</span>
+      </div>
+      <div class="layer-desc">${detail}</div>
+      <div class="layer-stats">
+        <span class="layer-indicator ${indicatorCls}"></span>
+        <span class="layer-stat-text">${statusLabel} | ${modulesLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function fetchDashboard() {
+  try {
+    const res = await fetch(API + '/api/dashboard');
+    const d = await res.json();
+    updateDashboard(d);
+  } catch(e) {
+    // API 실패 시 콘솔 노이즈 최소화 (DevTools 깜빡임 방지)
+    showDemoData();
+  }
+}
+
+function updateDashboard(d) {
+  document.getElementById('health-score').textContent = d.health_score;
+  const hf = document.getElementById('health-fill');
+  hf.style.width = d.health_score + '%';
+  hf.style.background = d.health_score >= 70 ? 'var(--green)' : d.health_score >= 40 ? 'var(--yellow)' : 'var(--red)';
+
+  document.getElementById('pass-rate').textContent = d.today.pass_rate + '%';
+  document.getElementById('gate-runs-today').textContent = `${t('today')}: ${d.today.gate_runs} ${t('runs')}`;
+  document.getElementById('today-cost').textContent = '$' + d.today.ai_cost;
+  document.getElementById('cumul-cost').textContent = `${t('total')}: $${d.cumulative.total_cost_usd}`;
+  document.getElementById('files-indexed').textContent = d.cumulative.total_files_indexed;
+  document.getElementById('searches-today').textContent = `${t('searches')}: ${d.today.searches}`;
+
+  // Weekly chart
+  const wk = d.weekly_trend;
+  charts.weekly.data.labels = wk.map(w => w.date.slice(5));
+  charts.weekly.data.datasets[0].data = wk.map(w => w.passed);
+  charts.weekly.data.datasets[1].data = wk.map(w => w.failed);
+  charts.weekly.update();
+
+  // Donut
+  charts.donut.data.datasets[0].data = [d.today.gate_passed, d.today.gate_failed, d.today.gate_warned];
+  charts.donut.update();
+
+  // Cost trend
+  charts.cost.data.labels = wk.map(w => w.date.slice(5));
+  charts.cost.data.datasets[0].data = wk.map(w => w.cost);
+  charts.cost.update();
+
+  // Gate log
+  const log = document.getElementById('gate-log');
+  log.innerHTML = d.recent_gates.slice(-10).reverse().map(g => {
+    const cls = g.status === 'passed' ? 'pass' : g.status === 'failed' ? 'fail' : 'warn';
+    const time = g.timestamp ? g.timestamp.split('T')[1]?.slice(0,8) : '';
+    return `<li><span class="badge ${cls}">${g.status}</span><span>Gate ${g.gate} ${g.name}</span><span style="color:var(--muted);margin-left:auto;font-size:.75rem">${time}</span></li>`;
+  }).join('');
+
+  // Team
+  const tl = document.getElementById('team-list');
+  if (d.team.length) {
+    tl.innerHTML = d.team.map(m =>
+      `<div class="team-row"><div class="team-avatar">${m.name[0]}</div><div class="team-info"><div class="name">${m.name}</div><div class="detail">${m.active_files} ${t('files')} | ${m.gate_runs} ${t('gates')} | ${m.status}</div></div></div>`
+    ).join('');
+  } else {
+    tl.innerHTML = `<p style="color:var(--muted);font-size:.85rem;padding:20px 0">${t('no_team')}</p>`;
+  }
+
+  // Pipeline radar chart - Gate별 통과율 반영
+  if (d.gate_pass_rates && charts.pipeline) {
+    _lastGatePassRates = d.gate_pass_rates;
+    charts.pipeline.data.datasets[0].data = d.gate_pass_rates;
+    charts.pipeline.update();
+  }
+
+  // 대시보드 데이터 캐싱 (다른 탭에서 활용)
+  _lastDashboardData = d;
+
+  document.getElementById('last-update').textContent = t('updated') + ' ' + new Date().toLocaleTimeString();
+}
+
+function showDemoData() {
+  const demo = {
+    health_score: 78,
+    today: { pass_rate: 75, gate_runs: 12, gate_passed: 9, gate_failed: 1, gate_warned: 2, ai_cost: 0.45, searches: 8 },
+    cumulative: { total_cost_usd: 12.50, total_files_indexed: 42 },
+    weekly_trend: Array.from({length:7}, (_,i) => {
+      const d = new Date(); d.setDate(d.getDate() - 6 + i);
+      return { date: d.toISOString().slice(0,10), passed: 5+Math.floor(Math.random()*8), failed: Math.floor(Math.random()*3), cost: +(Math.random()*2).toFixed(2), searches: Math.floor(Math.random()*10) };
+    }),
+    gate_pass_rates: [85, 70, 60, 65, 80, 90],
+    recent_gates: [
+      {gate:1,name:'Syntax Agent',status:'passed',timestamp:new Date().toISOString()},
+      {gate:2,name:'Rules Agent',status:'passed',timestamp:new Date().toISOString()},
+      {gate:3,name:'Integration Agent',status:'warning',timestamp:new Date().toISOString()},
+      {gate:4,name:'Review Agent',status:'passed',timestamp:new Date().toISOString()},
+      {gate:5,name:'Architecture Agent',status:'passed',timestamp:new Date().toISOString()},
+      {gate:6,name:'Collision Agent',status:'passed',timestamp:new Date().toISOString()},
+    ],
+    team: [
+      {name:'Developer A',active_files:5,gate_runs:4,status:'working'},
+      {name:'Developer B',active_files:3,gate_runs:2,status:'online'},
+    ]
+  };
+  updateDashboard(demo);
+}
+
+async function fetchOnboarding() {
+  try {
+    const res = await fetch(API + '/api/onboarding');
+    const d = await res.json();
+    renderOnboarding(d);
+  } catch(e) {
+    renderOnboardingDemo();
+  }
+}
+
+function renderOnboardingVisual(apiData) {
+  // 1. Project Description - API 데이터 활용
+  const overview = apiData?.project_overview;
+  if (overview) {
+    document.getElementById('ob-project-desc').textContent = overview.description || t('ob_project_desc');
+  } else {
+    document.getElementById('ob-project-desc').textContent = t('ob_project_desc');
+  }
+
+  // Gate 통과율 기반 Layer 실시간 상태 결정
+  const gpr = _lastGatePassRates || [0,0,0,0,0,0];
+  // L1: Gate1(Syntax), L2: Gate3(Integration), L3: Gate1+2 평균, L4: Gate6(Collision), L5: 대시보드(항상 active)
+  function layerStatus(rate, hasData) {
+    if (!hasData) return 'idle';
+    if (rate >= 70) return 'active';
+    if (rate >= 40) return 'warn';
+    return 'warn';
+  }
+  function layerStatusText(rate, hasData, nameKo, nameEn) {
+    if (!hasData) return currentLang === 'ko' ? '데이터 없음' : 'No data';
+    const pct = rate.toFixed(0) + '%';
+    if (rate >= 70) return (currentLang === 'ko' ? '정상 - 통과율 ' : 'OK - Pass rate ') + pct;
+    if (rate >= 40) return (currentLang === 'ko' ? '주의 - 통과율 ' : 'Warning - Pass rate ') + pct;
+    return (currentLang === 'ko' ? '위험 - 통과율 ' : 'Critical - Pass rate ') + pct;
+  }
+
+  const g1 = gpr[0], g2 = gpr[1], g3 = gpr[2], g4 = gpr[3], g5 = gpr[4], g6 = gpr[5];
+  const anyGateRun = gpr.some(v => v > 0);
+  const avgG12 = (g1 + g2) / 2;
+
+  const flowLayers = [
+    { n: 'L1', ko: '구조화 프롬프트', en: 'Structured Prompts',
+      status: anyGateRun ? 'active' : 'idle',
+      statusText: anyGateRun
+        ? (currentLang === 'ko' ? '정상 - PACT-D 활성' : 'OK - PACT-D Active')
+        : (currentLang === 'ko' ? '대기 중' : 'Standby') },
+    { n: 'L2', ko: 'RAG 메모리', en: 'RAG Memory',
+      status: anyGateRun ? 'active' : 'idle',
+      statusText: anyGateRun
+        ? (currentLang === 'ko' ? '정상 - 인덱싱 연결' : 'OK - Indexing Connected')
+        : (currentLang === 'ko' ? '대기 중' : 'Standby') },
+    { n: 'L3', ko: '품질 게이트', en: 'Quality Gate',
+      status: layerStatus(avgG12, anyGateRun),
+      statusText: layerStatusText(avgG12, anyGateRun) },
+    { n: 'L4', ko: '협업 오케스트레이터', en: 'Collaboration',
+      status: anyGateRun ? 'active' : 'idle',
+      statusText: anyGateRun
+        ? (currentLang === 'ko' ? '정상 - MCP 연결됨' : 'OK - MCP Connected')
+        : (currentLang === 'ko' ? '대기 중' : 'Standby') },
+    { n: 'L5', ko: '대시보드', en: 'Dashboard',
+      status: 'active',
+      statusText: currentLang === 'ko' ? '정상 - 서빙 중' : 'OK - Serving' },
+  ];
+
+  document.getElementById('ob-flow').innerHTML = flowLayers.map((l, i) => {
+    const statusCls = l.status; // active | warn | idle
+    return (i > 0 ? '<span class="ob-flow-arrow">&#10132;</span>' : '') +
+    `<div class="ob-flow-node status-${statusCls}">
+      <div class="ob-flow-num">${l.n}</div>
+      <div class="ob-flow-name">${currentLang === 'ko' ? l.ko : l.en}</div>
+      <div class="ob-flow-status">
+        <span class="ob-flow-dot ${statusCls}"></span>
+        <span class="ob-flow-status-text ${statusCls}">${l.statusText}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 2. Module Status Cards - API 데이터 활용
+  const modules = apiData?.key_modules || [
+    { layer: 'shared', files: ['config','logger','types'], count: 3 },
+    { layer: 'layer2_rag', files: ['chunker','indexer','searcher','vector_db','gate_basic','meta_generator'], count: 6 },
+    { layer: 'layer3_agents', files: ['gate_runner','integration_agent','review_agent','arch_agent','collision_agent'], count: 5 },
+    { layer: 'layer4_collab', files: ['mcp_server','work_zone','decision_extractor'], count: 3 },
+    { layer: 'layer5_dashboard', files: ['app','metrics','onboarding','feedback_loop'], count: 4 },
+  ];
+
+  const modIcons = { 'shared': '&#9881;', 'layer2_rag': '&#128269;', 'layer3_agents': '&#128737;', 'layer4_collab': '&#129309;', 'layer5_dashboard': '&#128202;' };
+  const modNames = {
+    ko: { 'shared': '공통 모듈', 'layer2_rag': 'RAG 엔진', 'layer3_agents': 'Agent 게이트', 'layer4_collab': '협업 도구', 'layer5_dashboard': '대시보드' },
+    en: { 'shared': 'Shared', 'layer2_rag': 'RAG Engine', 'layer3_agents': 'Agent Gates', 'layer4_collab': 'Collaboration', 'layer5_dashboard': 'Dashboard' },
+  };
+  const maxFiles = Math.max(...modules.map(m => m.count), 1);
+
+  document.getElementById('ob-modules').innerHTML = modules.map(m => {
+    const pct = Math.round(m.count / maxFiles * 100);
+    const fileList = (m.files || []).join(', ');
+    return `<div class="ob-mod-card">
+      <div class="ob-mod-icon">${modIcons[m.layer] || '&#128196;'}</div>
+      <div class="ob-mod-name">${modNames[currentLang]?.[m.layer] || m.layer}</div>
+      <div class="ob-mod-count">${m.count}</div>
+      <div class="ob-mod-label">${t('ob_files')}</div>
+      <div class="ob-mod-bar"><div class="ob-mod-bar-fill" style="width:${pct}%"></div></div>
+      <div class="ob-mod-files" style="font-size:.7rem;color:var(--muted);margin-top:4px;word-break:break-all;">${fileList}</div>
+    </div>`;
+  }).join('');
+
+  // 3. Quick Start Checklist - 실제 시스템 상태 기반
+  const dd = _lastDashboardData;
+  const hasGateRuns = dd && dd.today && dd.today.gate_runs > 0;
+  const hasIndexed = dd && dd.cumulative && dd.cumulative.total_files_indexed > 0;
+  const hasSearches = dd && dd.today && dd.today.searches > 0;
+
+  const checks = currentLang === 'ko' ? [
+    { cmd: 'python --version', desc: 'Python 3.10+ 환경 확인', done: true },
+    { cmd: 'pip install -r requirements.txt', desc: '의존성 패키지 설치', done: true },
+    { cmd: 'python cli.py index .', desc: '코드베이스 벡터 DB 인덱싱', done: hasIndexed,
+      detail: hasIndexed ? `${dd.cumulative.total_files_indexed}개 파일 인덱싱됨` : '아직 인덱싱 안 됨' },
+    { cmd: 'python cli.py search "검색어"', desc: '시맨틱 검색 테스트', done: hasSearches,
+      detail: hasSearches ? `오늘 ${dd.today.searches}회 검색` : '아직 검색 안 함' },
+    { cmd: 'gate_check / pipeline', desc: '6-Gate 파이프라인 실행', done: hasGateRuns,
+      detail: hasGateRuns ? `오늘 ${dd.today.gate_runs}회 실행 (통과율 ${dd.today.pass_rate}%)` : '아직 실행 안 함' },
+    { cmd: 'python server.py', desc: '대시보드 서버 시작', done: true, detail: '현재 실행 중' },
+  ] : [
+    { cmd: 'python --version', desc: 'Verify Python 3.10+ environment', done: true },
+    { cmd: 'pip install -r requirements.txt', desc: 'Install dependencies', done: true },
+    { cmd: 'python cli.py index .', desc: 'Index codebase into vector DB', done: hasIndexed,
+      detail: hasIndexed ? `${dd.cumulative.total_files_indexed} files indexed` : 'Not indexed yet' },
+    { cmd: 'python cli.py search "query"', desc: 'Test semantic search', done: hasSearches,
+      detail: hasSearches ? `${dd.today.searches} searches today` : 'No searches yet' },
+    { cmd: 'gate_check / pipeline', desc: 'Run 6-Gate pipeline', done: hasGateRuns,
+      detail: hasGateRuns ? `${dd.today.gate_runs} runs today (${dd.today.pass_rate}% pass)` : 'No runs yet' },
+    { cmd: 'python server.py', desc: 'Start dashboard server', done: true, detail: 'Currently running' },
+  ];
+
+  document.getElementById('ob-checklist').innerHTML = checks.map(c =>
+    `<div class="ob-check-item">
+      <div class="ob-check-icon ${c.done ? 'done' : 'todo'}">${c.done ? '&#10003;' : (checks.indexOf(c)+1)}</div>
+      <div class="ob-check-text">
+        <div>${c.desc}</div>
+        <span class="cmd">${c.cmd}</span>
+        ${c.detail ? `<div style="font-size:.75rem;color:${c.done ? 'var(--green)' : 'var(--yellow)'};margin-top:2px;">${c.detail}</div>` : ''}
+      </div>
+    </div>`
+  ).join('');
+
+  // 4. ADR Timeline (visual)
+  // ADR 정규화 데이터
+  const adrRegistry = [
+    {
+      num: '001',
+      title_ko: '기술 스택 선정',
+      title_en: 'Tech Stack Selection',
+      desc_ko: 'Python + TypeScript 하이브리드 기술 스택을 선택한 이유와 대안 분석',
+      desc_en: 'Why Python + TypeScript hybrid stack was chosen over alternatives',
+    },
+    {
+      num: '003',
+      title_ko: 'ChromaDB 벡터 DB 선정',
+      title_en: 'ChromaDB Vector DB Selection',
+      desc_ko: 'LanceDB 대신 ChromaDB를 채택 - Python 통합이 쉽고 설치가 간편하기 때문',
+      desc_en: 'ChromaDB chosen over LanceDB for easier Python integration and simpler setup',
+    },
+  ];
+
+  // API에서 받은 ADR이 있으면 레지스트리에 없는 것도 추가
+  const apiAdrs = apiData?.adr_timeline || [];
+  apiAdrs.forEach(a => {
+    const num = a.file?.match(/^(\d+)/)?.[1];
+    if (num && !adrRegistry.find(r => r.num === num)) {
+      adrRegistry.push({
+        num,
+        title_ko: a.title,
+        title_en: a.title,
+        desc_ko: a.title,
+        desc_en: a.title,
+      });
+    }
+  });
+
+  // 번호순 정렬
+  adrRegistry.sort((a, b) => a.num.localeCompare(b.num));
+
+  if (adrRegistry.length) {
+    document.getElementById('adr-timeline').innerHTML = adrRegistry.map(a => {
+      const title = currentLang === 'ko' ? a.title_ko : a.title_en;
+      const desc = currentLang === 'ko' ? a.desc_ko : a.desc_en;
+      return `<div class="ob-tl-item">
+        <div class="ob-tl-title"><span class="ob-tl-badge">ADR-${a.num}</span>${title}</div>
+        <div class="ob-tl-desc">${desc}</div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('adr-timeline').innerHTML = `<p style="color:var(--muted);padding:20px 0">${t('no_adr')}</p>`;
+  }
+}
+
+function renderOnboarding(d) {
+  renderOnboardingVisual(d);
+}
+
+function renderOnboardingDemo() {
+  renderOnboardingVisual(null);
+}
+
+async function fetchFeedback() {
+  try {
+    const res = await fetch(API + '/api/feedback');
+    const d = await res.json();
+    renderFeedback(d);
+  } catch(e) {
+    renderFeedbackDemo();
+  }
+}
+
+// Gate별 실패 원인 설명
+const failureReasons = {
+  ko: {
+    'Syntax Agent': { desc: '코드 구문 오류 (괄호 누락, 들여쓰기 오류 등)', fix: '저장 시 자동 포맷팅 도구 사용 권장' },
+    'Rules Agent': { desc: '코딩 규칙 위반 (네이밍, 타입힌트 누락 등)', fix: 'ESLint/flake8 사전 검사 설정' },
+    'Integration Agent': { desc: '테스트 실패 또는 테스트 파일 미작성', fix: '변경 파일에 대한 테스트 코드 작성' },
+    'Review Agent': { desc: '보안 취약점 또는 성능 안티패턴 감지', fix: 'OWASP 체크리스트 참고하여 코드 수정' },
+    'Architecture Agent': { desc: 'Layer 의존성 위반 또는 네이밍 규칙 불일치', fix: 'architecture-map.md 참고하여 구조 준수' },
+    'Collision Agent': { desc: '다른 팀원과 동일 파일 동시 수정 충돌', fix: 'Work Zone 선언 후 작업 시작' },
+  },
+  en: {
+    'Syntax Agent': { desc: 'Code syntax errors (missing brackets, indentation, etc.)', fix: 'Use auto-formatting on save' },
+    'Rules Agent': { desc: 'Coding rule violations (naming, missing type hints, etc.)', fix: 'Set up ESLint/flake8 pre-checks' },
+    'Integration Agent': { desc: 'Test failures or missing test files', fix: 'Write tests for changed files' },
+    'Review Agent': { desc: 'Security vulnerabilities or performance anti-patterns detected', fix: 'Review OWASP checklist and fix code' },
+    'Architecture Agent': { desc: 'Layer dependency violations or naming rule mismatches', fix: 'Follow architecture-map.md structure' },
+    'Collision Agent': { desc: 'Simultaneous file edit conflict with team members', fix: 'Declare Work Zone before starting' },
+  }
+};
+
+function renderFeedback(d) {
+  // 요약 통계 카드 렌더링
+  const totalRuns = d.total_runs || 0;
+  const totalFail = d.total_failures || 0;
+  const failRate = d.failure_rate || 0;
+  const passRate = totalRuns > 0 ? (100 - failRate).toFixed(1) : 0;
+
+  const summaryEl = document.getElementById('fb-summary');
+  const isKo = currentLang === 'ko';
+  summaryEl.innerHTML = `
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:.85rem;color:var(--muted);">${isKo ? '총 Gate 실행' : 'Total Gate Runs'}</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--blue);">${totalRuns}</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:.85rem;color:var(--muted);">${isKo ? '총 실패' : 'Total Failures'}</div>
+      <div style="font-size:2rem;font-weight:800;color:var(--red);">${totalFail}</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:.85rem;color:var(--muted);">${isKo ? '실패율' : 'Failure Rate'}</div>
+      <div style="font-size:2rem;font-weight:800;color:${failRate > 30 ? 'var(--red)' : failRate > 15 ? 'var(--yellow)' : 'var(--green)'};">${failRate}%</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:.85rem;color:var(--muted);">${isKo ? '통과율' : 'Pass Rate'}</div>
+      <div style="font-size:2rem;font-weight:800;color:${passRate >= 70 ? 'var(--green)' : passRate >= 40 ? 'var(--yellow)' : 'var(--red)'};">${passRate}%</div>
+    </div>
+  `;
+
+  // 실패 패턴 차트
+  const labels = (d.patterns || []).map(p => p.gate);
+  const data = (d.patterns || []).map(p => p.count);
+  charts.failure.data.labels = labels.length ? labels : [t('no_data')];
+  charts.failure.data.datasets[0].data = data.length ? data : [0];
+  charts.failure.update();
+
+  renderFailureReasons(d.patterns || []);
+
+  // 상위 실패 메시지 목록
+  const topMsgs = d.top_messages || [];
+  const tmEl = document.getElementById('fb-top-messages');
+  const tmTitle = document.getElementById('fb-top-msg-title');
+  tmTitle.textContent = isKo ? '빈번한 실패 메시지 Top 5' : 'Top 5 Failure Messages';
+
+  if (topMsgs.length) {
+    tmEl.innerHTML = topMsgs.map((m, i) => `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.06);${i===0?'background:rgba(255,107,107,.08);border-radius:8px;':''}">
+        <span style="font-size:1.3rem;font-weight:800;color:var(--red);min-width:28px;">#${i+1}</span>
+        <span style="flex:1;font-size:.9rem;">${m.message}</span>
+        <span style="font-size:.85rem;font-weight:700;color:var(--yellow);white-space:nowrap;">${m.count}${isKo ? '회' : 'x'}</span>
+      </div>
+    `).join('');
+  } else {
+    tmEl.innerHTML = `<p style="color:var(--muted);padding:16px 0;">${isKo ? '실패 메시지 없음 - 양호' : 'No failure messages - Good'}</p>`;
+  }
+
+  // 개선 제안
+  const sl = document.getElementById('suggestions-list');
+  const sugs = d.suggestions || [];
+  sl.innerHTML = sugs.length
+    ? sugs.map((s, i) => `<div class="suggestion-item" style="display:flex;align-items:flex-start;gap:10px;">
+        <span style="font-size:1.1rem;min-width:24px;">&#128161;</span>
+        <span>${s}</span>
+      </div>`).join('')
+    : `<div class="suggestion-item">${t('no_suggestions')}</div>`;
+}
+
+function renderFeedbackDemo() {
+  renderFeedback({
+    total_runs: 12,
+    total_failures: 6,
+    failure_rate: 50.0,
+    patterns: [
+      { gate: 'Review Agent', count: 3 },
+      { gate: 'Rules Agent', count: 2 },
+      { gate: 'Syntax Agent', count: 1 },
+    ],
+    top_messages: [
+      { message: 'Gate 2 실패 - 4개 규칙 위반', count: 2 },
+      { message: 'Gate 4 실패 - 보안 이슈 발견', count: 1 },
+    ],
+    suggestions: [t('no_fail_pattern')],
+  });
+}
+
+function renderFailureReasons(patterns) {
+  const el = document.getElementById('failure-reasons');
+  if (!patterns || !patterns.length) {
+    el.innerHTML = `<p class="fb-reason-empty">${t('fb_no_failures')}</p>`;
+    return;
+  }
+
+  const reasons = failureReasons[currentLang] || failureReasons['en'];
+  el.innerHTML = patterns.map(p => {
+    const r = reasons[p.gate] || { desc: p.gate, fix: '-' };
+    return `<div class="fb-reason-item">
+      <div class="fb-reason-header">
+        <span class="fb-reason-gate">${p.gate}</span>
+        <span class="fb-reason-count">${p.count} ${t('fb_times')}</span>
+      </div>
+      <div class="fb-reason-desc">
+        <strong style="color:var(--red);">${currentLang === 'ko' ? '원인' : 'Cause'}:</strong> ${r.desc}<br>
+        <strong style="color:var(--green);">${currentLang === 'ko' ? '해결' : 'Fix'}:</strong> ${r.fix}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function connectWebSocket() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  try {
+    ws = new WebSocket(proto + '//' + location.host + '/ws');
+    ws.onopen = () => {
+      document.getElementById('ws-status').textContent = t('live');
+    };
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      if (msg.type === 'dashboard_update') updateDashboard(msg.data);
+      if (msg.type === 'alert') fetchAlerts();
+      if (msg.type === 'gate_result') fetchDashboard().then(() => { fetchOnboarding(); fetchFeedback(); evaluateAlerts(); fetchHealthBreakdown(); });
+    };
+    ws.onclose = () => {
+      document.getElementById('ws-status').textContent = t('reconnecting');
+      setTimeout(connectWebSocket, 3000);
+    };
+  } catch(e) {
+    document.getElementById('ws-status').textContent = t('demo_mode');
+  }
+}
+
+// ================================================================
+// RAG Search
+// ================================================================
+let _ragLangFilter = '';
+
+async function fetchRagStats() {
+  try {
+    const res = await fetch(API + '/api/rag/stats');
+    const d = await res.json();
+    document.getElementById('rag-total-chunks').textContent = d.total_chunks || 0;
+    document.getElementById('rag-collection').textContent = d.collection_name || '-';
+    const statusEl = document.getElementById('rag-db-status');
+    if (d.total_chunks > 0) {
+      statusEl.textContent = 'Online';
+      statusEl.style.color = 'var(--green)';
+    } else {
+      statusEl.textContent = 'Empty';
+      statusEl.style.color = 'var(--yellow)';
+    }
+  } catch {
+    document.getElementById('rag-db-status').textContent = 'Offline';
+    document.getElementById('rag-db-status').style.color = 'var(--red)';
+  }
+}
+
+async function doRagSearch() {
+  const query = document.getElementById('rag-query').value.trim();
+  if (!query) return;
+
+  const btn = document.getElementById('rag-search-btn');
+  const resultsEl = document.getElementById('rag-results');
+  btn.disabled = true;
+  btn.textContent = t('rag_searching');
+  resultsEl.innerHTML = `<div class="search-empty"><div class="search-empty-icon" style="animation:pulse 1s infinite;">&#128269;</div><div>${t('rag_searching')}</div></div>`;
+
+  try {
+    const langParam = _ragLangFilter ? `&lang=${_ragLangFilter}` : '';
+    const res = await fetch(`${API}/api/rag/search?q=${encodeURIComponent(query)}&top_k=10${langParam}`);
+    const d = await res.json();
+
+    if (!d.results || d.results.length === 0) {
+      resultsEl.innerHTML = `<div class="search-empty"><div class="search-empty-icon">&#128533;</div><div class="search-empty-text">${t('rag_no_results')}</div></div>`;
+    } else {
+      const header = `<div style="margin-bottom:14px;font-size:.9rem;color:var(--muted);">${d.total} ${t('rag_results_count')} &mdash; "${d.query}"</div>`;
+      const items = d.results.map((r, i) => {
+        const scorePct = Math.round(r.score * 100);
+        const scoreClass = scorePct >= 70 ? 'high' : scorePct >= 45 ? 'mid' : 'low';
+        const fname = r.file_path.split(/[/\\]/).pop();
+        const langBadge = r.language ? `<span style="font-size:.72rem;padding:2px 8px;border-radius:4px;background:rgba(108,92,231,.15);color:var(--accent);font-weight:600;">${r.language}</span>` : '';
+        const typeBadge = r.chunk_type ? `<span style="font-size:.72rem;padding:2px 8px;border-radius:4px;background:rgba(77,166,255,.12);color:var(--blue);font-weight:600;">${r.chunk_type}${r.name ? ': ' + r.name : ''}</span>` : '';
+        const code = r.content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+        return `<div class="search-result-item">
+          <div class="search-result-header">
+            <span class="search-score ${scoreClass}">${scorePct}%</span>
+            <span class="search-file">${fname}</span>
+            ${langBadge} ${typeBadge}
+            <span class="search-meta">${t('rag_lines')} ${r.start_line}-${r.end_line}</span>
+          </div>
+          <div class="search-code">${code}</div>
+          <div style="margin-top:8px;font-size:.75rem;color:var(--muted);word-break:break-all;">${r.file_path}</div>
+        </div>`;
+      }).join('');
+      resultsEl.innerHTML = header + items;
+    }
+  } catch (e) {
+    resultsEl.innerHTML = `<div class="search-empty"><div class="search-empty-icon">&#9888;</div><div>Search failed: ${e.message}</div></div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = t('rag_search_btn');
+}
+
+// RAG search event listeners
+document.getElementById('rag-search-btn').addEventListener('click', doRagSearch);
+document.getElementById('rag-query').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doRagSearch();
+});
+
+// Language filter buttons
+document.getElementById('rag-lang-filters').addEventListener('click', (e) => {
+  const btn = e.target.closest('.search-filter-btn');
+  if (!btn) return;
+  document.querySelectorAll('#rag-lang-filters .search-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _ragLangFilter = btn.dataset.langFilter || '';
+});
+
+// Load stats when search tab is opened
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (tab.dataset.tab === 'search') fetchRagStats();
+    if (tab.dataset.tab === 'collab') fetchWorkZones();
+  });
+});
+
+
+// ================================================================
+// M3: Pipeline Runner
+// ================================================================
+let _pipelineHistory = [];
+
+async function runPipeline(bypass = false) {
+  const filePath = document.getElementById('pipeline-file').value.trim();
+  const author = document.getElementById('pipeline-author').value.trim() || 'dashboard';
+
+  if (!filePath) {
+    alert(currentLang === 'ko' ? '파일 경로를 입력하세요' : 'Enter a file path');
+    return;
+  }
+
+  const btn = document.getElementById('pipeline-run-btn');
+  const progress = document.getElementById('pipeline-progress');
+  const resultsEl = document.getElementById('pipeline-results');
+
+  btn.disabled = true;
+  progress.style.display = 'block';
+  resultsEl.innerHTML = '';
+
+  try {
+    const res = await authFetch('/api/pipeline', {
+      method: 'POST',
+      body: { file_path: filePath, author, bypass }
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      resultsEl.innerHTML = `<div style="color:var(--red);padding:16px;">Error: ${data.error || 'Pipeline failed'}</div>`;
+      return;
+    }
+
+    _pipelineHistory.unshift({ ...data, file_path: filePath, timestamp: new Date().toISOString() });
+    renderPipelineResults(data);
+    updateGateHistory();
+    updateGateStats();
+
+  } catch (err) {
+    resultsEl.innerHTML = `<div style="color:var(--red);padding:16px;">Network error: ${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    progress.style.display = 'none';
+  }
+}
+
+function renderPipelineResults(data) {
+  const resultsEl = document.getElementById('pipeline-results');
+  const gateNames = { 1:'Syntax Agent', 2:'Rules Agent', 3:'Integration Agent', 4:'Review Agent', 5:'Architecture Agent', 6:'Collision Agent' };
+
+  let html = '<div class="pipeline-results">';
+  for (const g of data.gates) {
+    const s = g.status;
+    html += `
+      <div class="pipeline-gate-row">
+        <div class="pipeline-gate-num ${s}">${g.gate_number}</div>
+        <div class="pipeline-gate-info">
+          <div class="pipeline-gate-name">${g.gate_name}</div>
+          <div class="pipeline-gate-msg">${g.message}</div>
+        </div>
+        <div class="pipeline-gate-status ${s}">${s}</div>
+      </div>`;
+  }
+
+  const os = data.overall_status;
+  const overallMsg = os === 'passed' ? t('pipeline_overall_passed')
+    : os === 'warning' ? t('pipeline_overall_warning')
+    : t('pipeline_overall_failed');
+
+  html += `
+    <div class="pipeline-overall ${os}">
+      <span style="font-size:1.2rem;">${os === 'passed' ? '&#10004;' : os === 'warning' ? '&#9888;' : '&#10008;'}</span>
+      <span>${overallMsg}</span>
+      <span style="margin-left:auto;font-size:.82rem;opacity:.8;">${data.summary} | ${data.total_time}s</span>
+    </div>`;
+
+  html += '</div>';
+  resultsEl.innerHTML = html;
+}
+
+function updateGateHistory() {
+  const el = document.getElementById('gate-history-list');
+  if (_pipelineHistory.length === 0) return;
+
+  let html = '';
+  for (const run of _pipelineHistory.slice(0, 20)) {
+    const time = new Date(run.timestamp).toLocaleTimeString();
+    const os = run.overall_status;
+    const icon = os === 'passed' ? '&#10004;' : os === 'warning' ? '&#9888;' : '&#10008;';
+    const color = os === 'passed' ? 'var(--green)' : os === 'warning' ? 'var(--yellow)' : 'var(--red)';
+    html += `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="color:${color};font-size:1.1rem;">${icon}</span>
+        <div style="flex:1;">
+          <div style="font-size:.85rem;font-weight:600;">${run.file_path || 'unknown'}</div>
+          <div style="font-size:.75rem;color:var(--muted);">${run.summary}</div>
+        </div>
+        <span style="font-size:.75rem;color:var(--muted);">${time}</span>
+      </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function updateGateStats() {
+  let passed = 0, warning = 0, failed = 0, total = 0;
+  for (const run of _pipelineHistory) {
+    for (const g of (run.gates || [])) {
+      total++;
+      if (g.status === 'passed') passed++;
+      else if (g.status === 'warning') warning++;
+      else if (g.status === 'failed') failed++;
+    }
+  }
+  document.getElementById('gate-stat-passed').textContent = passed;
+  document.getElementById('gate-stat-warning').textContent = warning;
+  document.getElementById('gate-stat-failed').textContent = failed;
+  document.getElementById('gate-stat-total').textContent = total;
+}
+
+document.getElementById('pipeline-run-btn').addEventListener('click', () => runPipeline(false));
+document.getElementById('pipeline-bypass-btn').addEventListener('click', () => runPipeline(true));
+document.getElementById('pipeline-file').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') runPipeline(false);
+});
+
+
+// ================================================================
+// M3: Work Zone
+// ================================================================
+async function fetchWorkZones() {
+  try {
+    const res = await authFetch('/api/work-zone/list');
+    const data = await res.json();
+    renderWorkZones(data.zones || []);
+  } catch (err) {
+    console.error('Work zone fetch error:', err);
+  }
+}
+
+function renderWorkZones(zones) {
+  const el = document.getElementById('wz-zones');
+  if (!zones.length) {
+    el.innerHTML = `<div class="wz-empty">${t('wz_empty')}</div>`;
+    return;
+  }
+
+  let html = '<div class="wz-grid">';
+  for (const z of zones) {
+    const initial = (z.author || '?')[0].toUpperCase();
+    const time = new Date(z.declared_at).toLocaleTimeString();
+    const fileTags = z.files.map(f => `<span class="wz-file-tag">${f}</span>`).join('');
+
+    html += `
+      <div class="wz-card">
+        <div class="wz-author">
+          <div class="wz-avatar">${initial}</div>
+          <div>
+            <div class="wz-name">${z.author}</div>
+            <div class="wz-time">${time}</div>
+          </div>
+          <button onclick="releaseWorkZone('${z.author}')" style="margin-left:auto;padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--red);font-size:.72rem;cursor:pointer;">${t('wz_release')}</button>
+        </div>
+        ${z.description ? `<div style="font-size:.8rem;color:var(--text);margin-bottom:8px;">${z.description}</div>` : ''}
+        <div class="wz-files">${fileTags}</div>
+      </div>`;
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function declareWorkZone() {
+  const author = document.getElementById('wz-author').value.trim();
+  const filesStr = document.getElementById('wz-files').value.trim();
+  const desc = document.getElementById('wz-desc').value.trim();
+
+  if (!author || !filesStr) {
+    alert(currentLang === 'ko' ? '작업자와 파일을 입력하세요' : 'Enter author and files');
+    return;
+  }
+
+  const files = filesStr.split(',').map(f => f.trim()).filter(Boolean);
+
+  try {
+    const res = await authFetch('/api/work-zone/declare', {
+      method: 'POST',
+      body: { author, files, description: desc }
+    });
+    const data = await res.json();
+
+    if (data.conflicts && data.conflicts.length > 0) {
+      const msgs = data.conflicts.map(c => `${c.conflicting_author}: ${c.overlapping_files.join(', ')}`);
+      alert(`${t('wz_conflict_warn')}\n${msgs.join('\n')}`);
+    }
+
+    document.getElementById('wz-author').value = '';
+    document.getElementById('wz-files').value = '';
+    document.getElementById('wz-desc').value = '';
+    fetchWorkZones();
+  } catch (err) {
+    console.error('Declare error:', err);
+  }
+}
+
+async function releaseWorkZone(author) {
+  try {
+    await authFetch('/api/work-zone/release', {
+      method: 'POST',
+      body: { author }
+    });
+    fetchWorkZones();
+  } catch (err) {
+    console.error('Release error:', err);
+  }
+}
+
+document.getElementById('wz-declare-btn').addEventListener('click', declareWorkZone);
+
+
+// ================================================================
+// M3: Decision Extractor
+// ================================================================
+async function extractDecisions() {
+  const text = document.getElementById('de-text').value.trim();
+  const autoSave = document.getElementById('de-auto-save').checked;
+  const resultsEl = document.getElementById('de-results');
+
+  if (!text) {
+    alert(currentLang === 'ko' ? '텍스트를 입력하세요' : 'Enter text to analyze');
+    return;
+  }
+
+  const btn = document.getElementById('de-extract-btn');
+  btn.disabled = true;
+  resultsEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);">Analyzing...</div>`;
+
+  try {
+    const res = await authFetch('/api/decision/extract', {
+      method: 'POST',
+      body: { text, auto_save: autoSave, source: 'dashboard' }
+    });
+    const data = await res.json();
+
+    if (!data.decisions || data.decisions.length === 0) {
+      resultsEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);">${t('de_no_decisions')}</div>`;
+      return;
+    }
+
+    let html = '';
+    for (const d of data.decisions) {
+      const confClass = d.confidence >= 0.7 ? 'high' : d.confidence >= 0.4 ? 'mid' : 'low';
+      html += `
+        <div class="de-decision-card">
+          <div class="de-decision-title">
+            ${d.title}
+            <span class="de-confidence ${confClass}">${Math.round(d.confidence * 100)}%</span>
+          </div>
+          <div class="de-decision-body">${d.context}</div>
+          ${d.rationale ? `<div style="margin-top:6px;font-size:.8rem;color:var(--accent);">Rationale: ${d.rationale}</div>` : ''}
+          ${d.adr_path ? `<div class="de-adr-saved">${t('de_saved_adr')}: ${d.adr_path}</div>` : ''}
+        </div>`;
+    }
+    resultsEl.innerHTML = html;
+
+  } catch (err) {
+    resultsEl.innerHTML = `<div style="color:var(--red);padding:16px;">Error: ${err.message}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('de-extract-btn').addEventListener('click', extractDecisions);
+
+
+// ================================================================
+// M4: Alert System
+// ================================================================
+let alertPanelOpen = false;
+
+async function fetchAlerts() {
+  try {
+    const res = await fetch('/api/alerts?active_only=true');
+    const data = await res.json();
+    renderAlertBar(data.alerts || []);
+  } catch { /* silent */ }
+}
+
+function renderAlertBar(alerts) {
+  const bar = document.getElementById('alert-bar');
+  const countEl = document.getElementById('alert-bar-count');
+  const textEl = document.getElementById('alert-bar-text');
+
+  if (!alerts.length) {
+    bar.classList.add('hidden');
+    document.getElementById('alert-panel').innerHTML = '';
+    return;
+  }
+
+  bar.classList.remove('hidden');
+  countEl.textContent = alerts.length;
+
+  const critical = alerts.filter(a => a.level === 'critical');
+  if (critical.length > 0) {
+    textEl.textContent = critical[0].title;
+    textEl.style.color = 'var(--red)';
+  } else {
+    textEl.textContent = alerts[0].title;
+    textEl.style.color = 'var(--yellow)';
+  }
+
+  const panel = document.getElementById('alert-panel');
+  let html = '';
+  for (const a of alerts) {
+    const time = new Date(a.created_at).toLocaleTimeString();
+    html += `<div class="alert-item">
+      <div class="alert-level ${a.level}"></div>
+      <div>
+        <div class="alert-title">${a.title}</div>
+        <div class="alert-msg">${a.message}</div>
+      </div>
+      <div class="alert-time">${time}</div>
+    </div>`;
+  }
+  panel.innerHTML = html;
+}
+
+function toggleAlertPanel() {
+  alertPanelOpen = !alertPanelOpen;
+  document.getElementById('alert-panel').classList.toggle('open', alertPanelOpen);
+}
+
+async function dismissAllAlerts() {
+  try {
+    await fetch('/api/alerts/acknowledge', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({alert_id: 'all'}),
+    });
+    fetchAlerts();
+  } catch { /* silent */ }
+}
+
+async function evaluateAlerts() {
+  try {
+    await fetch('/api/alerts/evaluate', {method: 'POST'});
+    fetchAlerts();
+  } catch { /* silent */ }
+}
+
+
+// ================================================================
+// M4: Health Breakdown
+// ================================================================
+async function fetchHealthBreakdown() {
+  try {
+    const res = await fetch('/api/health');
+    const data = await res.json();
+    renderHealthBreakdown(data);
+  } catch { /* silent */ }
+}
+
+function renderHealthBreakdown(data) {
+  _setTextAndBar('hb-gate', data.gate_pass_rate, '%');
+  _setTextAndBar('hb-arch', data.architecture_consistency, '%');
+  _setTextAndBar('hb-quality', data.code_quality, '%');
+  _setTextAndBar('hb-activity', data.activity_index, '%');
+
+  const debtEl = document.getElementById('tech-debt-list');
+  const items = data.tech_debt_items || [];
+  if (!items.length) {
+    debtEl.innerHTML = `<div style="font-size:.82rem;color:var(--muted);padding:8px 0;">${t('tech_debt_empty')}</div>`;
+    return;
+  }
+  let html = `<h4 style="font-size:.9rem;margin-bottom:10px;" data-i18n="tech_debt_title">${t('tech_debt_title')}</h4>`;
+  for (const d of items) {
+    html += `<div class="tech-debt-item">
+      <span class="tech-debt-severity ${d.severity}">${d.severity}</span>
+      <span style="flex:1">${d.issue} (Gate ${d.gate}, ${d.count}x)</span>
+      <span style="color:var(--muted);font-size:.78rem">${d.suggestion}</span>
+    </div>`;
+  }
+  debtEl.innerHTML = html;
+}
+
+function _setTextAndBar(prefix, value, suffix) {
+  const valEl = document.getElementById(prefix);
+  const barEl = document.getElementById(prefix + '-bar');
+  if (valEl) valEl.textContent = Math.round(value || 0) + (suffix || '');
+  if (barEl) barEl.style.width = Math.round(value || 0) + '%';
+}
+
+
+// ================================================================
+// M4: Project Q&A
+// ================================================================
+async function askProjectQuestion() {
+  const input = document.getElementById('qa-input');
+  const answerEl = document.getElementById('qa-answer');
+  const question = input.value.trim();
+  if (!question) return;
+
+  answerEl.style.display = 'block';
+  answerEl.innerHTML = '<span style="color:var(--muted)">Searching...</span>';
+
+  try {
+    const res = await fetch('/api/onboarding/qa', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({question}),
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      answerEl.innerHTML = `<span style="color:var(--red)">${data.error}</span>`;
+      return;
+    }
+
+    let html = _formatQAAnswer(data.answer);
+
+    if (data.code_references && data.code_references.length > 0) {
+      html += '<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;font-size:.82rem;">';
+      html += '<strong style="color:var(--muted)">Code References:</strong>';
+      for (const ref of data.code_references) {
+        const name = ref.name ? ` (${ref.name})` : '';
+        html += `<div style="margin-top:4px;"><code>${ref.file}:${ref.lines}</code>${name} - ${(ref.score * 100).toFixed(0)}%</div>`;
+      }
+      html += '</div>';
+    }
+
+    answerEl.innerHTML = html;
+  } catch (err) {
+    answerEl.innerHTML = `<span style="color:var(--red)">Error: ${err.message}</span>`;
+  }
+}
+
+function _formatQAAnswer(text) {
+  return text
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>');
+}
+
+
+// ================================================================
+// Init
+// ================================================================
+initCharts();
+applyLanguage();
+connectWebSocket();
+fetchRagStats();
+fetchWorkZones();
+
+setInterval(() => fetchDashboard().then(() => { fetchOnboarding(); fetchFeedback(); fetchHealthBreakdown(); evaluateAlerts(); }), 30000);
+</script>
+</body>
+</html>

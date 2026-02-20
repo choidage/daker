@@ -1,0 +1,38 @@
+# Dependencies
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+
+# IDE
+.vscode
+.cursor
+.idea
+
+# Git
+.git
+.gitignore
+
+# Test
+tests/
+.pytest_cache
+htmlcov
+
+# Dashboard (별도 빌드)
+dashboard/
+
+# Docker
+docker-compose.yml
+Dockerfile.*
+
+# Data (volumes로 관리)
+.chromadb/
+.meta/
+.state/
+
+# Misc
+*.egg-info
+.env
+.env.local
+node_modules

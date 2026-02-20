@@ -1,0 +1,54 @@
+{
+  "name": "바이브코딩 개선 아이디어 - 프레젠테이션 디자인",
+  "author": "팀 바이브제왕",
+  "date": "2026-02-11",
+  "version": "1.0",
+  "format": "Pencil MCP (.pen)",
+  "variables": {
+    "teal": "#0D6E6E",
+    "teal-light": "#14918C",
+    "teal-bg": "#F0F8F8",
+    "dark": "#0D0D0D",
+    "white": "#FFFFFF",
+    "gray-text": "#7A7A7A",
+    "gray-border": "#E8E8E8",
+    "gray-bg": "#FAFAFA",
+    "orange": "#E07B54",
+    "success": "#22C55E"
+  },
+  "slides": [
+    {
+      "id": "v5Ums",
+      "name": "01 - Cover",
+      "description": "커버 슬라이드 — 제목, 제안자 정보, 4대 핵심 기술 카드"
+    },
+    {
+      "id": "CWTcS",
+      "name": "02 - Problem",
+      "description": "문제 인식 — 모델 품질 격차(한계A)와 협업 구조 부재(한계B)"
+    },
+    {
+      "id": "vDCjV",
+      "name": "03 - Solution",
+      "description": "VIBE-X 5-Layer 아키텍처 + 비용-효과 분석 + KPI 비교"
+    },
+    {
+      "id": "ZsIjv",
+      "name": "04 - Roadmap",
+      "description": "Phase 1~4 단계별 구현 로드맵"
+    },
+    {
+      "id": "2KHnX",
+      "name": "05 - Conclusion",
+      "description": "결론 — 핵심 메시지와 4대 기술 필러 요약"
+    }
+  ],
+  "typography": {
+    "heading": "Space Grotesk",
+    "body": "Inter"
+  },
+  "dimensions": {
+    "width": 1440,
+    "height": 900
+  }
+}

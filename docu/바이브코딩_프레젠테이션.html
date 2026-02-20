@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>바이브코딩 개선 아이디어 — 팀 바이브제왕</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #1a1a1a; }
+  .slide {
+    width: 1440px; height: 900px; margin: 40px auto;
+    position: relative; overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  }
+  h1,h2,h3,.sg { font-family: 'Space Grotesk', sans-serif; }
+  :root {
+    --teal: #0D6E6E;
+    --teal-light: #14918C;
+    --teal-bg: #F0F8F8;
+    --dark: #0D0D0D;
+    --white: #FFFFFF;
+    --gray-text: #7A7A7A;
+    --gray-border: #E8E8E8;
+    --gray-bg: #FAFAFA;
+    --orange: #E07B54;
+    --success: #22C55E;
+  }
+
+  /* === SLIDE 1: COVER === */
+  .slide-cover { display: flex; flex-direction: column; background: var(--white); }
+  .cover-top-bar { width: 100%; height: 6px; background: var(--teal); flex-shrink: 0; }
+  .cover-body { display: flex; flex: 1; }
+  .cover-left { flex: 1; padding: 100px 80px 80px 80px; display: flex; flex-direction: column; justify-content: center; gap: 32px; }
+  .cover-tag { font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500; color: var(--teal); letter-spacing: 2px; }
+  .cover-title { font-size: 56px; font-weight: 700; color: var(--dark); line-height: 1.1; letter-spacing: -1px; }
+  .cover-subtitle { font-size: 16px; color: var(--gray-text); line-height: 1.6; }
+  .cover-divider { width: 60px; height: 3px; background: var(--teal); }
+  .cover-info { font-size: 13px; color: var(--gray-text); display: flex; flex-direction: column; gap: 6px; }
+  .cover-right { width: 420px; background: var(--teal); padding: 60px 48px; display: flex; flex-direction: column; justify-content: center; gap: 24px; }
+  .cover-right-title { font-size: 11px; font-weight: 600; color: #B0DEDE; letter-spacing: 3px; }
+  .tech-card { background: #0A5A5A; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+  .tech-card h3 { font-size: 20px; font-weight: 600; color: var(--white); }
+  .tech-card p { font-size: 12px; color: #B0DEDE; line-height: 1.5; }
+
+  /* === SLIDE 2: PROBLEM === */
+  .slide-problem { background: var(--white); padding: 60px 80px; display: flex; flex-direction: column; gap: 48px; }
+  .section-header { display: flex; align-items: center; gap: 16px; }
+  .section-num { font-size: 48px; font-weight: 700; color: var(--teal); }
+  .section-text h2 { font-size: 28px; font-weight: 600; color: var(--dark); }
+  .section-text p { font-size: 14px; color: var(--gray-text); margin-top: 6px; }
+  .divider-line { width: 100%; height: 1px; background: var(--gray-border); }
+  .problem-body { display: flex; gap: 48px; flex: 1; }
+  .problem-box { flex: 1; border: 1px solid var(--gray-border); padding: 24px 28px; display: flex; flex-direction: column; gap: 20px; }
+  .limit-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; }
+  .limit-label.a { color: var(--teal); }
+  .limit-label.b { color: var(--orange); }
+  .problem-box h3 { font-size: 22px; font-weight: 600; color: var(--dark); }
+  .problem-box .desc { font-size: 13px; color: var(--gray-text); line-height: 1.7; }
+  .bullet-list { display: flex; flex-direction: column; gap: 12px; }
+  .bullet-item { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--dark); }
+  .bullet-dot { width: 6px; height: 6px; flex-shrink: 0; }
+  .bullet-dot.teal { background: var(--teal); }
+  .bullet-dot.orange { background: var(--orange); }
+
+  /* === SLIDE 3: SOLUTION === */
+  .slide-solution { background: var(--white); padding: 48px 80px; display: flex; flex-direction: column; gap: 32px; }
+  .solution-body { display: flex; gap: 32px; flex: 1; }
+  .layer-stack { flex: 1; display: flex; flex-direction: column; }
+  .layer-item { flex: 1; display: flex; align-items: center; gap: 16px; padding: 16px 20px; }
+  .layer-num { font-size: 14px; font-weight: 700; color: #B0DEDE; min-width: 24px; }
+  .layer-title { font-size: 15px; font-weight: 600; color: var(--white); }
+  .layer-desc { font-size: 11px; color: #B0DEDE; margin-top: 4px; }
+  .mcp-bar { height: 36px; background: var(--dark); display: flex; align-items: center; justify-content: center; }
+  .mcp-bar span { font-size: 12px; font-weight: 500; color: var(--white); }
+  .right-panel { width: 380px; display: flex; flex-direction: column; gap: 20px; }
+  .stat-box { border: 1px solid var(--gray-border); padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--teal); letter-spacing: 2px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; }
+  .stat-row .label { font-size: 12px; color: var(--gray-text); }
+  .stat-row .value { font-size: 18px; font-weight: 600; color: var(--gray-text); }
+  .stat-row .value.highlight { color: var(--teal); font-weight: 700; }
+  .save-badge { background: var(--teal-bg); padding: 10px 16px; text-align: center; font-size: 14px; font-weight: 600; color: var(--teal); }
+  .kpi-row { display: flex; justify-content: space-between; align-items: center; }
+  .kpi-row .kl { font-size: 12px; color: var(--gray-text); }
+  .kpi-vals { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+  .kpi-vals .old { color: #B0B0B0; }
+  .kpi-vals .arr { color: var(--gray-text); font-size: 12px; }
+  .kpi-vals .new { color: var(--success); font-weight: 700; font-size: 14px; }
+
+  /* === SLIDE 4: ROADMAP === */
+  .slide-roadmap { background: var(--white); padding: 48px 80px; display: flex; flex-direction: column; gap: 32px; }
+  .phase-grid { display: flex; gap: 20px; flex: 1; }
+  .phase-card { flex: 1; border: 1px solid var(--gray-border); padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
+  .phase-card.active { border: 2px solid var(--teal); }
+  .phase-head { display: flex; justify-content: space-between; align-items: center; }
+  .phase-badge { padding: 4px 10px; font-size: 11px; font-weight: 600; }
+  .phase-badge.active { background: var(--teal); color: var(--white); }
+  .phase-badge.default { background: var(--gray-bg); color: var(--dark); border: 1px solid var(--gray-border); }
+  .phase-cost { font-size: 16px; font-weight: 700; color: var(--teal); }
+  .phase-cost.gray { color: var(--gray-text); font-size: 12px; font-weight: 400; }
+  .phase-title { font-size: 18px; font-weight: 600; color: var(--dark); }
+  .phase-time { font-size: 11px; color: var(--gray-text); }
+  .phase-div { width: 100%; height: 1px; background: var(--gray-border); }
+  .phase-items { display: flex; flex-direction: column; gap: 10px; }
+  .phase-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--dark); }
+  .phase-dot { width: 5px; height: 5px; background: var(--teal); flex-shrink: 0; }
+
+  /* === SLIDE 5: CONCLUSION === */
+  .slide-conclusion { background: var(--dark); display: flex; flex-direction: column; }
+  .conclusion-strip { width: 100%; height: 6px; background: var(--teal); flex-shrink: 0; }
+  .conclusion-body { flex: 1; padding: 60px 80px; display: flex; flex-direction: column; justify-content: center; gap: 48px; }
+  .quote-section { display: flex; flex-direction: column; gap: 24px; }
+  .quote-mark { font-size: 80px; font-weight: 700; color: var(--teal); line-height: 0.6; }
+  .quote-text { font-size: 36px; font-weight: 600; color: var(--white); line-height: 1.4; letter-spacing: -0.5px; }
+  .quote-sub { font-size: 14px; color: var(--gray-text); line-height: 1.6; }
+  .conclusion-divider { width: 60px; height: 3px; background: var(--teal); }
+  .pillars-row { display: flex; gap: 24px; }
+  .pillar-card { flex: 1; border: 1px solid #333; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+  .pillar-card h4 { font-size: 16px; font-weight: 600; color: var(--teal); }
+  .pillar-card p { font-size: 12px; color: var(--gray-text); line-height: 1.6; }
+  .conclusion-footer { display: flex; justify-content: space-between; align-items: center; }
+  .footer-left { display: flex; flex-direction: column; gap: 4px; }
+  .footer-left .team { font-size: 14px; font-weight: 500; color: var(--gray-text); }
+  .footer-left .date { font-size: 12px; color: #555; }
+  .footer-right { display: flex; align-items: center; gap: 12px; }
+  .footer-right .brand { font-size: 18px; font-weight: 700; color: var(--teal); }
+  .footer-right .ver { font-size: 12px; color: #555; }
+
+  /* Navigation */
+  .nav { text-align: center; padding: 20px; }
+  .nav span { color: #666; font-size: 13px; }
+
+  @media print {
+    body { background: white; }
+    .slide { box-shadow: none; page-break-after: always; margin: 0; }
+    .nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: COVER -->
+<div class="slide slide-cover">
+  <div class="cover-top-bar"></div>
+  <div class="cover-body">
+    <div class="cover-left">
+      <span class="cover-tag sg">PROPOSAL &nbsp;|&nbsp; 2026. 02. 11</span>
+      <h1 class="cover-title sg">바이브코딩<br>개선 아이디어</h1>
+      <p class="cover-subtitle">Agent + MCP + RAG + Collaboration 통합을 통한<br>바이브 코딩의 구조적 한계 극복 전략</p>
+      <div class="cover-divider"></div>
+      <div class="cover-info">
+        <span>제안자 : &nbsp;팀 바이브제왕</span>
+        <span>버전 : &nbsp;v1.0</span>
+      </div>
+    </div>
+    <div class="cover-right">
+      <span class="cover-right-title">CORE TECHNOLOGIES</span>
+      <div class="tech-card"><h3 class="sg">Agent</h3><p>자율적 품질 검증 · 작업 조율 · 의사결정 추출</p></div>
+      <div class="tech-card"><h3 class="sg">MCP</h3><p>도구 간 표준화된 통신 · 컨텍스트 공유 프로토콜</p></div>
+      <div class="tech-card"><h3 class="sg">RAG</h3><p>코드베이스를 질문 가능한 지식 베이스로 전환</p></div>
+      <div class="tech-card"><h3 class="sg">Collaboration</h3><p>팀 단위 작업 조율 · 충돌 방지 · 의사결정 동기화</p></div>
+    </div>
+  </div>
+</div>
+<div class="nav"><span>1 / 5</span></div>
+
+<!-- SLIDE 2: PROBLEM -->
+<div class="slide slide-problem">
+  <div class="section-header">
+    <span class="section-num sg">01</span>
+    <div class="section-text">
+      <h2 class="sg">문제 인식 — 바이브 코딩의 이중 한계</h2>
+      <p>AI 코드 생성의 현재 한계를 두 가지 축으로 분석합니다</p>
+    </div>
+  </div>
+  <div class="divider-line"></div>
+  <div class="problem-body">
+    <div class="problem-box">
+      <span class="limit-label a">한계 A</span>
+      <h3 class="sg">모델 품질 격차</h3>
+      <p class="desc">저비용 모델(Sonnet, GPT-4o-mini)은 고비용 모델(Opus, o1-pro)에 비해 코드 품질이 크게 떨어지지만, 비용 현실 때문에 대부분의 팀이 저비용 모델을 사용합니다.</p>
+      <div class="bullet-list">
+        <div class="bullet-item"><div class="bullet-dot teal"></div>아키텍처 일관성 유지 실패</div>
+        <div class="bullet-item"><div class="bullet-dot teal"></div>엣지 케이스 처리 누락</div>
+        <div class="bullet-item"><div class="bullet-dot teal"></div>보안 취약점 자동 생성</div>
+        <div class="bullet-item"><div class="bullet-dot teal"></div>기존 코드와의 통합 부조화</div>
+      </div>
+    </div>
+    <div class="problem-box">
+      <span class="limit-label b">한계 B</span>
+      <h3 class="sg">협업 구조 부재</h3>
+      <p class="desc">Opus급 모델을 사용해도 해결할 수 없는 구조적 문제. 여러 명이 AI를 동시에 사용할 때 발생하는 협업 파괴 현상입니다.</p>
+      <div class="bullet-list">
+        <div class="bullet-item"><div class="bullet-dot orange"></div>컨텍스트 고립 (Context Isolation)</div>
+        <div class="bullet-item"><div class="bullet-dot orange"></div>아키텍처 발산 (Architecture Divergence)</div>
+        <div class="bullet-item"><div class="bullet-dot orange"></div>암묵적 의사결정 유실 (Tacit Decision Loss)</div>
+        <div class="bullet-item"><div class="bullet-dot orange"></div>지식 증발 (Knowledge Evaporation)</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="nav"><span>2 / 5</span></div>
+
+<!-- SLIDE 3: SOLUTION -->
+<div class="slide slide-solution">
+  <div class="section-header">
+    <span class="section-num sg">02</span>
+    <div class="section-text">
+      <h2 class="sg">VIBE-X — 5-Layer 통합 아키텍처</h2>
+      <p>Agent + MCP + RAG + 협업 프로토콜을 통합한 구조적 솔루션</p>
+    </div>
+  </div>
+  <div class="divider-line"></div>
+  <div class="solution-body">
+    <div class="layer-stack">
+      <div class="layer-item" style="background:#0D6E6E"><span class="layer-num sg">L5</span><div><div class="layer-title sg">팀 인텔리전스 대시보드</div><div class="layer-desc">프로젝트 건강 지표 · 비용 관리 · 온보딩 자동화</div></div></div>
+      <div class="layer-item" style="background:#0E7D7D"><span class="layer-num sg">L4</span><div><div class="layer-title sg">협업 오케스트레이터 (MCP 기반)</div><div class="layer-desc">팀 컨텍스트 동기화 · 충돌 사전 감지 · 결정 자동 추출</div></div></div>
+      <div class="layer-item" style="background:#10908E"><span class="layer-num sg">L3</span><div><div class="layer-title sg">멀티 Agent 품질 게이트</div><div class="layer-desc">자율 Agent 체인으로 6단계 품질 검증 파이프라인</div></div></div>
+      <div class="layer-item" style="background:#14A3A0"><span class="layer-num sg">L2</span><div><div class="layer-title sg">Living RAG Memory Engine</div><div class="layer-desc">코드베이스를 질문 가능한 지식 베이스로 전환</div></div></div>
+      <div class="layer-item" style="background:#1AB5B0"><span class="layer-num sg">L1</span><div><div class="layer-title sg">구조화 프롬프트 &amp; 프로젝트 스캐폴딩</div><div class="layer-desc">PACT-D 프레임워크 · 팀 설계 청사진 (Single Source of Truth)</div></div></div>
+      <div class="mcp-bar"><span class="sg">MCP (Model Context Protocol) — 전체를 관통하는 통신 계층</span></div>
+    </div>
+    <div class="right-panel">
+      <div class="stat-box">
+        <span class="stat-label">비용-효과 비교</span>
+        <div class="sg" style="font-size:18px;font-weight:600;color:var(--dark)">월 비용 (5인 팀)</div>
+        <div class="stat-row"><span class="label">Opus × 5 (시스템 없음)</span><span class="value sg">~$750</span></div>
+        <div class="stat-row"><span class="label" style="color:var(--dark)">VIBE-X + Sonnet × 5</span><span class="value highlight sg">~$108</span></div>
+        <div class="save-badge sg">86% 비용 절감</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">핵심 지표 비교</span>
+        <div class="kpi-row"><span class="kl">아키텍처 일관성</span><div class="kpi-vals"><span class="old sg">40%</span><span class="arr">→</span><span class="new sg">90%</span></div></div>
+        <div class="kpi-row"><span class="kl">통합 충돌률</span><div class="kpi-vals"><span class="old sg">45%</span><span class="arr">→</span><span class="new sg">12%</span></div></div>
+        <div class="kpi-row"><span class="kl">설계 결정 추적률</span><div class="kpi-vals"><span class="old sg">10%</span><span class="arr">→</span><span class="new sg">85%</span></div></div>
+        <div class="kpi-row"><span class="kl">온보딩 시간</span><div class="kpi-vals"><span class="old sg">2~3주</span><span class="arr">→</span><span class="new sg">2~3일</span></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="nav"><span>3 / 5</span></div>
+
+<!-- SLIDE 4: ROADMAP -->
+<div class="slide slide-roadmap">
+  <div class="section-header">
+    <span class="section-num sg">03</span>
+    <div class="section-text">
+      <h2 class="sg">단계별 구현 로드맵</h2>
+      <p>Phase 1~4를 통한 점진적 도입 — 비용 $0에서 시작하여 플랫폼화까지</p>
+    </div>
+  </div>
+  <div class="divider-line"></div>
+  <div class="phase-grid">
+    <!-- Phase 1 -->
+    <div class="phase-card active">
+      <div class="phase-head"><span class="phase-badge active sg">Phase 1</span><span class="phase-cost sg">$0</span></div>
+      <div class="phase-title sg">즉시 적용</div>
+      <div class="phase-time">소요: 3시간</div>
+      <div class="phase-div"></div>
+      <div class="phase-items">
+        <div class="phase-item"><div class="phase-dot"></div>프로젝트 정의서 작성</div>
+        <div class="phase-item"><div class="phase-dot"></div>아키텍처 맵 작성</div>
+        <div class="phase-item"><div class="phase-dot"></div>PACT-D 프롬프트 도입</div>
+        <div class="phase-item"><div class="phase-dot"></div>memory.md 자동화</div>
+        <div class="phase-item"><div class="phase-dot"></div>ADR 운영 시작</div>
+      </div>
+    </div>
+    <!-- Phase 2 -->
+    <div class="phase-card">
+      <div class="phase-head"><span class="phase-badge default sg">Phase 2</span><span class="phase-cost sg">$0</span></div>
+      <div class="phase-title sg">기반 구축</div>
+      <div class="phase-time">소요: 1~2주</div>
+      <div class="phase-div"></div>
+      <div class="phase-items">
+        <div class="phase-item"><div class="phase-dot"></div>RAG 초기화 (Vector DB)</div>
+        <div class="phase-item"><div class="phase-dot"></div>Git Hook 설정</div>
+        <div class="phase-item"><div class="phase-dot"></div>Gate 1~2 자동 검증</div>
+        <div class="phase-item"><div class="phase-dot"></div>메타데이터 포집 습관화</div>
+      </div>
+    </div>
+    <!-- Phase 3 -->
+    <div class="phase-card">
+      <div class="phase-head"><span class="phase-badge default sg">Phase 3</span><span class="phase-cost gray">개발비</span></div>
+      <div class="phase-title sg">Agent 자동화</div>
+      <div class="phase-time">소요: 1~2개월</div>
+      <div class="phase-div"></div>
+      <div class="phase-items">
+        <div class="phase-item"><div class="phase-dot"></div>MCP 서버 연동</div>
+        <div class="phase-item"><div class="phase-dot"></div>Quality Gate Agent 1~6</div>
+        <div class="phase-item"><div class="phase-dot"></div>Decision Extractor 구현</div>
+        <div class="phase-item"><div class="phase-dot"></div>RAG 자동 인덱싱 파이프라인</div>
+      </div>
+    </div>
+    <!-- Phase 4 -->
+    <div class="phase-card">
+      <div class="phase-head"><span class="phase-badge default sg">Phase 4</span><span class="phase-cost gray">인프라비</span></div>
+      <div class="phase-title sg">플랫폼화</div>
+      <div class="phase-time">소요: 3~6개월</div>
+      <div class="phase-div"></div>
+      <div class="phase-items">
+        <div class="phase-item"><div class="phase-dot"></div>팀 대시보드 웹 앱</div>
+        <div class="phase-item"><div class="phase-dot"></div>IDE 플러그인 개발</div>
+        <div class="phase-item"><div class="phase-dot"></div>온보딩 자동화</div>
+        <div class="phase-item"><div class="phase-dot"></div>오픈소스 생태계 공개</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="nav"><span>4 / 5</span></div>
+
+<!-- SLIDE 5: CONCLUSION -->
+<div class="slide slide-conclusion">
+  <div class="conclusion-strip"></div>
+  <div class="conclusion-body">
+    <div class="quote-section">
+      <div class="quote-mark sg">"</div>
+      <div class="quote-text sg">바이브 코딩의 다음 단계는<br>더 좋은 모델이 아니라,<br>더 좋은 시스템에 있다.</div>
+      <div class="quote-sub">The next step for vibe coding lies not in better models, but in better systems.</div>
+    </div>
+    <div class="conclusion-divider"></div>
+    <div class="pillars-row">
+      <div class="pillar-card"><h4 class="sg">Agent</h4><p>사람이 놓치는 검증을<br>자율적으로 수행</p></div>
+      <div class="pillar-card"><h4 class="sg">MCP</h4><p>고립된 도구들을 하나의<br>통합 생태계로 연결</p></div>
+      <div class="pillar-card"><h4 class="sg">RAG</h4><p>휘발성 지능을<br>영속적 지식으로 전환</p></div>
+      <div class="pillar-card"><h4 class="sg">Collaboration</h4><p>개인 최적화를<br>팀 최적화로 확장</p></div>
+    </div>
+    <div class="conclusion-footer">
+      <div class="footer-left"><span class="team sg">팀 바이브제왕</span><span class="date">2026. 02. 11</span></div>
+      <div class="footer-right"><span class="brand sg">VIBE-X</span><span class="ver">v1.0</span></div>
+    </div>
+  </div>
+</div>
+<div class="nav"><span>5 / 5</span></div>
+
+</body>
+</html>

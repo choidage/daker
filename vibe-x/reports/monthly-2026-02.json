@@ -1,0 +1,62 @@
+{
+  "month": "2026-02",
+  "generated_at": "2026-02-20T13:29:28.204806",
+  "summary": {
+    "total_gate_runs": 200,
+    "pass_rate": 63.0,
+    "total_cost_usd": 0.0,
+    "total_files_indexed": 0,
+    "total_searches": 0,
+    "total_decisions": 0,
+    "active_days": 2
+  },
+  "failure_analysis": {
+    "total_failures": 17,
+    "total_runs": 200,
+    "failure_rate": 8.5,
+    "patterns": [
+      {
+        "gate": "Rules Agent",
+        "count": 8
+      },
+      {
+        "gate": "Syntax Agent",
+        "count": 7
+      },
+      {
+        "gate": "Review Agent",
+        "count": 2
+      }
+    ],
+    "top_messages": [
+      {
+        "message": "구문 오류 3건",
+        "count": 7
+      },
+      {
+        "message": "Gate 2 실패 - 8개 규칙 위반",
+        "count": 2
+      },
+      {
+        "message": "Gate 2 실패 - 6개 규칙 위반",
+        "count": 1
+      },
+      {
+        "message": "Gate 2 실패 - 149개 규칙 위반",
+        "count": 1
+      },
+      {
+        "message": "Gate 2 실패 - 11개 규칙 위반",
+        "count": 1
+      }
+    ],
+    "suggestions": [
+      "구문 오류가 반복됨 - 저장 시 자동 포맷팅(prettier/black) 설정 권장",
+      "코딩 규칙 위반 반복 - ESLint/flake8 사전 검사 강화 권장"
+    ]
+  },
+  "recommendations": [
+    "구문 오류가 반복됨 - 저장 시 자동 포맷팅(prettier/black) 설정 권장",
+    "코딩 규칙 위반 반복 - ESLint/flake8 사전 검사 강화 권장"
+  ]
+}

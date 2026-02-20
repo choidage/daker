@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "vibe-x": {
+      "command": "python",
+      "args": [
+        "c:\\Users\\USER\\OneDrive\\Desktop\\daker\\mcp\\mcp_server.py"
+      ],
+      "env": {
+        "PYTHONIOENCODING": "utf-8",
+        "VIBE_X_NO_WRAP_STDOUT": "1"
+      }
+    }
+  }
+}

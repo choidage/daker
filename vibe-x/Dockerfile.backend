@@ -1,0 +1,38 @@
+###############################################################################
+# VIBE-X FastAPI Backend
+#
+# 디렉토리 구조:
+#   /workspace/            ← project_root (PathConfig.project_root)
+#     vibe-x/              ← vibe_x_root
+#       src/
+#       .meta/
+#       .state/
+#       memory.md
+###############################################################################
+
+FROM python:3.11-slim AS base
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends build-essential && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace/vibe-x
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY src/ src/
+COPY docs/ docs/
+COPY memory.md memory.md
+
+RUN mkdir -p .meta .state src/layer5_dashboard/static docs/adr
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/workspace/vibe-x
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/dashboard')" || exit 1
+
+CMD ["uvicorn", "src.layer5_dashboard.app:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,104 @@
+{
+  "name": "vibe-x",
+  "displayName": "VIBE-X Quality Gate",
+  "description": "VIBE-X 통합 협업 플랫폼 - 코드 품질 게이트, 아키텍처 검증, 보안 검사를 IDE에서 바로 실행",
+  "version": "1.0.0",
+  "publisher": "team-vibejewang",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "icon": "resources/icon.png",
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:typescript",
+    "onLanguage:javascript"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vibe-x.runGates",
+        "title": "VIBE-X: Run Quality Gates",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "vibe-x.runGatesOnFile",
+        "title": "VIBE-X: Run Gates on Current File"
+      },
+      {
+        "command": "vibe-x.openDashboard",
+        "title": "VIBE-X: Open Dashboard"
+      },
+      {
+        "command": "vibe-x.declareWorkZone",
+        "title": "VIBE-X: Declare Work Zone"
+      },
+      {
+        "command": "vibe-x.showPipelineStatus",
+        "title": "VIBE-X: Show Pipeline Status"
+      }
+    ],
+    "configuration": {
+      "title": "VIBE-X",
+      "properties": {
+        "vibe-x.pythonPath": {
+          "type": "string",
+          "default": "python",
+          "description": "Python 실행 파일 경로"
+        },
+        "vibe-x.projectRoot": {
+          "type": "string",
+          "default": "",
+          "description": "VIBE-X 프로젝트 루트 경로 (빈 값이면 워크스페이스 루트 사용)"
+        },
+        "vibe-x.autoRunOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "파일 저장 시 자동으로 Gate 1,2 실행"
+        },
+        "vibe-x.dashboardUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "대시보드 서버 URL"
+        },
+        "vibe-x.language": {
+          "type": "string",
+          "enum": ["ko", "en"],
+          "default": "ko",
+          "description": "UI 언어 설정"
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "vibe-x.runGatesOnFile",
+        "key": "ctrl+shift+g",
+        "mac": "cmd+shift+g",
+        "when": "editorTextFocus"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "vibe-x.runGatesOnFile",
+          "group": "vibe-x",
+          "when": "editorTextFocus"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.3.0"
+  }
+}

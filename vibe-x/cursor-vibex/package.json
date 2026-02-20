@@ -1,0 +1,84 @@
+{
+  "name": "cursor-vibex",
+  "displayName": "VIBE-X",
+  "description": "VIBE-X 통합 협업 플랫폼 — RAG 검색, 6-Gate 품질 검증, 팀 협업 지원",
+  "version": "1.0.0",
+  "publisher": "team-vibejewang",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "vibex-sidebar",
+          "title": "VIBE-X",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "vibex-sidebar": [
+        {
+          "type": "webview",
+          "id": "vibex.sidebarView",
+          "name": "VIBE-X Panel"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "vibex.gateCheck",
+        "title": "VIBE-X: Run Gate Check (G1-G2)"
+      },
+      {
+        "command": "vibex.pipeline",
+        "title": "VIBE-X: Run Full Pipeline (G1-G6)"
+      },
+      {
+        "command": "vibex.ragSearch",
+        "title": "VIBE-X: RAG Search"
+      },
+      {
+        "command": "vibex.declareZone",
+        "title": "VIBE-X: Declare Work Zone"
+      },
+      {
+        "command": "vibex.insertPactd",
+        "title": "VIBE-X: Insert PACT-D Template"
+      },
+      {
+        "command": "vibex.openDashboard",
+        "title": "VIBE-X: Open Dashboard"
+      }
+    ],
+    "configuration": {
+      "title": "VIBE-X",
+      "properties": {
+        "vibex.apiUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8000",
+          "description": "VIBE-X API server URL"
+        },
+        "vibex.author": {
+          "type": "string",
+          "default": "",
+          "description": "Your name for Work Zone declarations"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  }
+}
