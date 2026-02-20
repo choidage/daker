@@ -1,0 +1,31 @@
+{
+  "name": "vibe-x-mcp",
+  "version": "1.0.0",
+  "description": "VIBE-X AI Code Quality & Team Collaboration MCP Server",
+  "author": "Team VibeJewang <choidage@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/choidage/daker"
+  },
+  "keywords": [
+    "mcp",
+    "vibe-x",
+    "code-quality",
+    "ai",
+    "cursor",
+    "model-context-protocol"
+  ],
+  "bin": {
+    "vibe-x-mcp": "bin/vibe-x-mcp.js"
+  },
+  "files": [
+    "bin/",
+    "python/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

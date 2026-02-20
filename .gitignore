@@ -35,10 +35,17 @@ desktop.ini
 .cursor/
 
 # MCP config (local only)
-mcp/
+mcp/mcp.json
 
 # Logs
 *.log
 
 # Docker volumes
 docker-data/
+
+# Build artifacts
+dist/
+*.tgz
+*.whl
+*.tar.gz
+*.egg-info/

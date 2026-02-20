@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "vibe-x-mcp"
+version = "1.0.0"
+description = "VIBE-X AI Code Quality & Team Collaboration MCP Server"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Team VibeJewang", email = "choidage@gmail.com" },
+]
+keywords = ["mcp", "vibe-x", "code-quality", "ai", "cursor"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = [
+    "mcp>=1.0.0",
+    "chromadb>=1.0.0",
+    "sentence-transformers>=3.0.0",
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.27.0",
+]
+
+[project.scripts]
+vibe-x-mcp = "vibe_x_mcp.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/choidage/daker"
+Repository = "https://github.com/choidage/daker"
