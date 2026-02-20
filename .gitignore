@@ -34,6 +34,9 @@ desktop.ini
 .idea/
 .cursor/
 
+# MCP config (local only)
+mcp/
+
 # Logs
 *.log
 
