@@ -8,10 +8,11 @@ VIBE-X AI Code Quality & Team Collaboration MCP Server for Cursor / Claude.
 - **RAG Code Search**: Semantic search over your codebase via ChromaDB
 - **Hidden Intent (.meta.json)**: Auto-extract code intent with AST analysis
 - **Team Collaboration**: Work Zone conflict prevention, Decision Extractor
+- **E2E Verification**: URL accessibility check, Playwright-based selector verification
 - **Alert & Feedback**: Failure pattern analysis, threshold-based alerts
 - **Onboarding Q&A**: RAG-based project Q&A for new team members
 
-## 19 MCP Tools
+## 21 MCP Tools
 
 | Category | Tools |
 |----------|-------|
@@ -20,6 +21,7 @@ VIBE-X AI Code Quality & Team Collaboration MCP Server for Cursor / Claude.
 | Collab | `work_zone`, `extract_decisions` |
 | Meta | `meta_analyze`, `meta_batch`, `meta_coverage`, `meta_dependency_graph` |
 | Analysis | `feedback_analysis`, `integration_test` |
+| E2E | `e2e_verify_url`, `e2e_verify_selector` |
 | Ops | `project_status`, `onboarding_qa`, `get_alerts`, `acknowledge_alerts`, `health_breakdown` |
 
 ## Install

@@ -3,12 +3,13 @@
 Model Context Protocol 서버 - AI 어시스턴트(Cursor, Claude 등)가
 코딩 중 VIBE-X 전체 기능을 호출할 수 있게 한다.
 
-도구 19개:
+도구 21개:
   [품질] gate_check, pipeline, security_review, architecture_check
   [RAG]  code_search, index_codebase
   [협업] work_zone, extract_decisions
   [메타] meta_analyze, meta_batch, meta_coverage, meta_dependency_graph
   [분석] feedback_analysis, integration_test
+  [E2E]  e2e_verify_url, e2e_verify_selector
   [운영] project_status, onboarding_qa, get_alerts, acknowledge_alerts
   [관리] list_projects, health_breakdown
 
@@ -75,7 +76,7 @@ mcp = FastMCP(
         "VIBE-X 전체 플랫폼 MCP 서버 (v2). "
         "코드 품질 6-Gate, 시맨틱 검색, 보안 리뷰, 아키텍처 검증, "
         "팀 협업(Work Zone), Hidden Intent 메타 분석, 피드백 루프, "
-        "알림 관리, 온보딩 Q&A, 멀티 프로젝트 관리를 제공합니다."
+        "E2E 검증(URL/셀렉터), 알림 관리, 온보딩 Q&A, 멀티 프로젝트 관리를 제공합니다."
     ),
 )
 
@@ -470,7 +471,51 @@ def integration_test(files: str) -> str:
 
 
 # ================================================================
-# Tool 16: 온보딩 Q&A
+# Tool 16: E2E URL 검증
+# ================================================================
+@mcp.tool()
+def e2e_verify_url(url: str, timeout_ms: int = 10000) -> str:
+    """URL이 정상 응답하는지 검증합니다.
+    웹 앱/대시보드 배포 후 접근 가능 여부를 확인할 때 사용합니다.
+    url: 검증할 URL (예: http://localhost:3000, https://example.com)
+    timeout_ms: 타임아웃(밀리초, 기본 10000)"""
+    from src.shared.e2e_verifier import verify_url, to_dict
+
+    result = verify_url(url, timeout_ms=timeout_ms)
+    return json.dumps(to_dict(result), ensure_ascii=False, indent=2)
+
+
+# ================================================================
+# Tool 17: E2E 셀렉터 검증 (Playwright)
+# ================================================================
+@mcp.tool()
+def e2e_verify_selector(
+    url: str,
+    selector: str,
+    expected_text: str = "",
+    timeout_ms: int = 15000,
+    screenshot_path: str = "",
+) -> str:
+    """URL 접속 후 특정 CSS 셀렉터 요소 존재/텍스트를 검증합니다.
+    Playwright 필요: pip install playwright && playwright install chromium
+    url: 검증할 URL
+    selector: CSS 셀렉터 (예: h1, .navbar, #login-btn)
+    expected_text: 요소 내 포함되어야 할 텍스트 (선택)
+    screenshot_path: 스크린샷 저장 경로 (선택)"""
+    from src.shared.e2e_verifier import verify_selector, to_dict
+
+    result = verify_selector(
+        url=url,
+        selector=selector,
+        expected_text=expected_text or "",
+        timeout_ms=timeout_ms,
+        screenshot_path=screenshot_path or None,
+    )
+    return json.dumps(to_dict(result), ensure_ascii=False, indent=2)
+
+
+# ================================================================
+# Tool 18: 온보딩 Q&A
 # ================================================================
 @mcp.tool()
 def onboarding_qa(question: str) -> str:
@@ -485,7 +530,7 @@ def onboarding_qa(question: str) -> str:
 
 
 # ================================================================
-# Tool 17: 알림 조회
+# Tool 19: 알림 조회
 # ================================================================
 @mcp.tool()
 def get_alerts(status: str = "active") -> str:
@@ -512,7 +557,7 @@ def get_alerts(status: str = "active") -> str:
 
 
 # ================================================================
-# Tool 18: 알림 일괄 해제
+# Tool 20: 알림 일괄 해제
 # ================================================================
 @mcp.tool()
 def acknowledge_alerts() -> str:
@@ -528,7 +573,7 @@ def acknowledge_alerts() -> str:
 
 
 # ================================================================
-# Tool 19: 건강 점수 상세 분해
+# Tool 21: 건강 점수 상세 분해
 # ================================================================
 @mcp.tool()
 def health_breakdown() -> str:

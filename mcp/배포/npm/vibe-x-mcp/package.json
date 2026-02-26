@@ -1,5 +1,5 @@
 {
-  "name": "vibe-x-mcp",
+  "name": "@choidage/vibe-x-mcp",
   "version": "1.0.0",
   "description": "VIBE-X AI Code Quality & Team Collaboration MCP Server",
   "author": "Team VibeJewang <choidage@gmail.com>",

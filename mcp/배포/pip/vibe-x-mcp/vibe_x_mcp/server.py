@@ -46,9 +46,9 @@ def create_server(project_root: Path) -> FastMCP:
         name="VIBE-X",
         instructions=(
             "VIBE-X Full Platform MCP Server (v2). "
-            "6-Gate pipeline, semantic code search, security review, "
-            "architecture validation, team collaboration, Hidden Intent meta analysis, "
-            "feedback loop, alert management, onboarding Q&A."
+        "6-Gate pipeline, semantic code search, security review, "
+        "architecture validation, team collaboration, Hidden Intent meta analysis, "
+        "feedback loop, E2E verification (URL/selector), alert management, onboarding Q&A."
         ),
     )
 
@@ -315,7 +315,42 @@ def create_server(project_root: Path) -> FastMCP:
         return json.dumps({"status": r.status.value, "message": r.message,
                            "details": r.details}, ensure_ascii=False, indent=2)
 
-    # ── Tool 16: Onboarding Q&A ──
+    # ── Tool 16: E2E URL Verification ──
+    @mcp.tool()
+    def e2e_verify_url(url: str, timeout_ms: int = 10000) -> str:
+        """Verify that a URL responds correctly.
+        Use after deploying web app/dashboard to check accessibility.
+        url: URL to verify (e.g. http://localhost:3000)
+        timeout_ms: timeout in milliseconds (default 10000)."""
+        from src.shared.e2e_verifier import verify_url, to_dict
+        result = verify_url(url, timeout_ms=timeout_ms)
+        return json.dumps(to_dict(result), ensure_ascii=False, indent=2)
+
+    # ── Tool 17: E2E Selector Verification (Playwright) ──
+    @mcp.tool()
+    def e2e_verify_selector(
+        url: str,
+        selector: str,
+        expected_text: str = "",
+        timeout_ms: int = 15000,
+        screenshot_path: str = "",
+    ) -> str:
+        """Verify that a CSS selector exists (and optionally contains text) on a URL.
+        Requires Playwright: pip install playwright && playwright install chromium
+        url: URL to verify
+        selector: CSS selector (e.g. h1, .navbar, #login-btn)
+        expected_text: text that must be contained in the element (optional)
+        screenshot_path: path to save screenshot (optional)."""
+        from src.shared.e2e_verifier import verify_selector, to_dict
+        result = verify_selector(
+            url=url, selector=selector,
+            expected_text=expected_text or "",
+            timeout_ms=timeout_ms,
+            screenshot_path=screenshot_path or None,
+        )
+        return json.dumps(to_dict(result), ensure_ascii=False, indent=2)
+
+    # ── Tool 18: Onboarding Q&A ──
     @mcp.tool()
     def onboarding_qa(question: str) -> str:
         """Answer project questions using RAG.

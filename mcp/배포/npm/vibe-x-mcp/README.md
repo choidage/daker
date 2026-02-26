@@ -28,7 +28,7 @@ Add to `~/.cursor/mcp.json`:
 }
 ```
 
-## 19 MCP Tools
+## 21 MCP Tools
 
 | Category | Tools |
 |----------|-------|
@@ -37,6 +37,7 @@ Add to `~/.cursor/mcp.json`:
 | Collab | `work_zone`, `extract_decisions` |
 | Meta | `meta_analyze`, `meta_batch`, `meta_coverage`, `meta_dependency_graph` |
 | Analysis | `feedback_analysis`, `integration_test` |
+| E2E | `e2e_verify_url`, `e2e_verify_selector` |
 | Ops | `project_status`, `onboarding_qa`, `get_alerts`, `acknowledge_alerts`, `health_breakdown` |
 
 ## Features
@@ -44,6 +45,7 @@ Add to `~/.cursor/mcp.json`:
 - **6-Gate Pipeline**: Syntax, Rules, Integration, Security, Architecture, Collision
 - **RAG Code Search**: Semantic search over your codebase via ChromaDB
 - **Hidden Intent (.meta.json)**: Auto-extract code intent with AST analysis
+- **E2E Verification**: URL accessibility check, Playwright-based selector verification
 - **Team Collaboration**: Work Zone conflict prevention, Decision Extractor
 - **Alert & Feedback**: Failure pattern analysis, threshold-based alerts
 
